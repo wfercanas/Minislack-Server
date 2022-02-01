@@ -67,3 +67,20 @@ func (h *hub) joinChannel(u string, c string) {
 		}
 	}
 }
+
+func (h *hub) message(u string, r string, m []byte) {
+	if sender, ok := h.clients[u]; ok {
+		switch r[0] {
+		case '#':
+			if channel, ok := h.channels[r]; ok {
+				if _, ok := channel.clients[sender]; ok {
+					channel.broadcast(sender.username, m)
+				}
+			}
+		case '@':
+			if user, ok := h.clients[r]; ok {
+				user.conn.Write(append(m, '\n'))
+			}
+		}
+	}
+}

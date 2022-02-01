@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strconv"
 )
+
+var DELIMITER = []byte(`\r\n`)
 
 type client struct {
 	conn       net.Conn
@@ -73,6 +76,40 @@ func (c *client) reg(args []byte) error {
 
 	c.username = string(u)
 	c.register <- c
+
+	return nil
+}
+
+func (c *client) msg(args []byte) error {
+	args = bytes.TrimSpace(args)
+	if args[0] != '#' && args[0] != '@' {
+		return fmt.Errorf("Recipient must be a channel ('#name') or a user (''@user)")
+	}
+
+	recipient := bytes.Split(args, []byte(" "))[0]
+	if len(recipient) == 0 {
+		return fmt.Errorf("Recipient must have a name")
+	}
+
+	args = bytes.TrimSpace(bytes.TrimPrefix(args, recipient))
+	l := bytes.Split(args, DELIMITER)[0]
+	length, err := strconv.Atoi(string(l))
+	if err != nil {
+		return fmt.Errorf("Body length must be present")
+	}
+	if length == 0 {
+		return fmt.Errorf("Body length must be at least 1")
+	}
+
+	padding := len(l) + len(DELIMITER) // Size of the body length + delimiter
+	body := args[padding : padding+length]
+
+	c.outbound <- command{
+		recipient: string(recipient[1:]),
+		sender:    c.username,
+		body:      body,
+		id:        MSG,
+	}
 
 	return nil
 }

@@ -61,3 +61,18 @@ func (c *client) handle(message []byte) {
 		c.err(fmt.Errorf("Unknow command %s", cmd))
 	}
 }
+
+func (c *client) reg(args []byte) error {
+	u := bytes.TrimSpace(args)
+	if u[0] != '@' {
+		return fmt.Errorf("Username must begin with @")
+	}
+	if len(u) == 0 {
+		return fmt.Errorf("Username cannot be blank")
+	}
+
+	c.username = string(u)
+	c.register <- c
+
+	return nil
+}

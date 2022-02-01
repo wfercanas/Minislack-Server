@@ -16,7 +16,7 @@ func (h *hub) run() {
 		case client := <-h.registrations:
 			h.register(client)
 		case client := <-h.deregistrations:
-			h.unregister(client)
+			h.deregister(client)
 		case cmd := <-h.commands:
 			switch cmd.id {
 			case JOIN:
@@ -51,6 +51,19 @@ func (h *hub) deregister(c *client) {
 		delete(h.clients, c.username)
 		for _, channel := range h.channels {
 			delete(channel.clients, c)
+		}
+	}
+}
+
+func (h *hub) joinChannel(u string, c string) {
+	if client, ok := h.clients[u]; ok {
+		if channel, ok := h.channels[c]; ok {
+			// Channel exists, join
+			channel.clients[client] = true
+		} else {
+			// Channel doesn't exists, create and join
+			h.channels[c] = newChannel(c)
+			h.channels[c].clients[client] = true
 		}
 	}
 }

@@ -45,3 +45,12 @@ func (h *hub) register(c *client) {
 		c.conn.Write([]byte("OK\n"))
 	}
 }
+
+func (h *hub) deregister(c *client) {
+	if _, exists := h.clients[c.username]; exists {
+		delete(h.clients, c.username)
+		for _, channel := range h.channels {
+			delete(channel.clients, c)
+		}
+	}
+}

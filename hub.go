@@ -35,3 +35,13 @@ func (h *hub) run() {
 		}
 	}
 }
+
+func (h *hub) register(c *client) {
+	if _, exists := h.clients[c.username]; exists {
+		c.username = ""
+		c.conn.Write([]byte("ERR username taken\n"))
+	} else {
+		h.clients[c.username] = c
+		c.conn.Write([]byte("OK\n"))
+	}
+}

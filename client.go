@@ -76,3 +76,7 @@ func (c *client) reg(args []byte) error {
 
 	return nil
 }
+
+func (c *client) err(e error) {
+	c.conn.Write([]byte("ERR " + e.Error() + "\n"))
+}

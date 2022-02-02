@@ -73,6 +73,7 @@ func (h *hub) deregister(c *client) {
 			delete(channel.clients, c)
 		}
 	}
+	log.Printf("DER Executed: connection lost with %s \n", c.username)
 }
 
 func (h *hub) joinChannel(u string, c string) {

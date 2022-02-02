@@ -13,6 +13,16 @@ type hub struct {
 	registrations   chan *client
 }
 
+func newHub() *hub {
+	return &hub{
+		registrations:   make(chan *client),
+		deregistrations: make(chan *client),
+		clients:         make(map[string]*client),
+		channels:        make(map[string]*channel),
+		commands:        make(chan command),
+	}
+}
+
 func (h *hub) run() {
 	for {
 		select {

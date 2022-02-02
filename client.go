@@ -19,6 +19,15 @@ type client struct {
 	username   string
 }
 
+func newClient(conn net.Conn, o chan<- command, r chan<- *client, d chan<- *client) *client {
+	return &client{
+		conn:       conn,
+		outbound:   o,
+		register:   r,
+		deregister: d,
+	}
+}
+
 func (c *client) read() error {
 	for {
 		msg, err := bufio.NewReader(c.conn).ReadBytes('\n')
@@ -76,6 +85,21 @@ func (c *client) reg(args []byte) error {
 
 	c.username = string(u)
 	c.register <- c
+
+	return nil
+}
+
+func (c *client) join(args []byte) error {
+	channelID := bytes.TrimSpace(args)
+	if channelID[0] != '#' {
+		return fmt.Errorf("ERR Channel ID must begin with #")
+	}
+
+	c.outbound <- command{
+		recipient: string(channelID),
+		sender:    c.username,
+		id:        JOIN,
+	}
 
 	return nil
 }

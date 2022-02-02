@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -53,11 +54,13 @@ func (h *hub) run() {
 
 func (h *hub) register(c *client) {
 	if _, exists := h.clients[c.username]; exists {
+		c.conn.Write([]byte("REG Denied: username already taken\n"))
+		h.hubLogs <- fmt.Sprintf("REG Denied: %s was already taken", c.username)
 		c.username = ""
-		c.conn.Write([]byte("ERR username taken\n"))
 	} else {
 		h.clients[c.username] = c
-		c.conn.Write([]byte("OK\n"))
+		c.conn.Write([]byte(fmt.Sprintf("REG Successful: registered as %s \n", c.username)))
+		h.hubLogs <- fmt.Sprintf("REG Successful: %s", c.username)
 	}
 }
 

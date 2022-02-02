@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -43,7 +42,7 @@ func (h *hub) run() {
 			case CHNS:
 				h.listChannels(cmd.sender)
 			default:
-				fmt.Errorf("Hub Switch: Cannot process %s", cmd.id)
+				// fmt.Errorf("Hub Switch: Cannot process %s", cmd.id)
 			}
 		}
 	}
@@ -110,7 +109,7 @@ func (h *hub) listUsers(u string) {
 	if client, ok := h.clients[u]; ok {
 		var names []string
 
-		for c, _ := range h.clients {
+		for c := range h.clients {
 			names = append(names, "@"+c+" ")
 		}
 

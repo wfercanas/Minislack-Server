@@ -153,6 +153,13 @@ func (c *client) msg(args []byte) error {
 	return nil
 }
 
+func (c *client) chns() {
+	c.outbound <- command{
+		sender: c.username,
+		id:     CHNS,
+	}
+}
+
 func (c *client) err(e error) {
 	c.conn.Write([]byte("ERR " + e.Error() + "\n"))
 }

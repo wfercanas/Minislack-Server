@@ -70,17 +70,17 @@ func (c *client) handle(message []byte) {
 	case "USRS":
 		c.usrs()
 	default:
-		c.err(fmt.Errorf("Unknow command %s", cmd))
+		c.err(fmt.Errorf("unknown command %s", cmd))
 	}
 }
 
 func (c *client) reg(args []byte) error {
 	u := bytes.TrimSpace(args)
 	if u[0] != '@' {
-		return fmt.Errorf("Username must begin with @")
+		return fmt.Errorf("username must begin with @")
 	}
 	if len(u) == 0 {
-		return fmt.Errorf("Username cannot be blank")
+		return fmt.Errorf("username cannot be blank")
 	}
 
 	c.username = string(u)
@@ -122,22 +122,22 @@ func (c *client) leave(args []byte) error {
 func (c *client) msg(args []byte) error {
 	args = bytes.TrimSpace(args)
 	if args[0] != '#' && args[0] != '@' {
-		return fmt.Errorf("Recipient must be a channel ('#name') or a user (''@user)")
+		return fmt.Errorf("recipient must be a channel ('#name') or a user (''@user)")
 	}
 
 	recipient := bytes.Split(args, []byte(" "))[0]
 	if len(recipient) == 0 {
-		return fmt.Errorf("Recipient must have a name")
+		return fmt.Errorf("recipient must have a name")
 	}
 
 	args = bytes.TrimSpace(bytes.TrimPrefix(args, recipient))
 	l := bytes.Split(args, DELIMITER)[0]
 	length, err := strconv.Atoi(string(l))
 	if err != nil {
-		return fmt.Errorf("Body length must be present")
+		return fmt.Errorf("body length must be present")
 	}
 	if length == 0 {
-		return fmt.Errorf("Body length must be at least 1")
+		return fmt.Errorf("body length must be at least 1")
 	}
 
 	padding := len(l) + len(DELIMITER) // Size of the body length + delimiter

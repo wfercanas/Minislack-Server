@@ -108,3 +108,20 @@ func (h *hub) listUsers(u string) {
 		client.conn.Write([]byte(resp + "\n"))
 	}
 }
+
+func (h *hub) listChannels(u string) {
+	if client, ok := h.clients[u]; ok {
+		var names []string
+
+		if len(h.channels) == 0 {
+			client.conn.Write([]byte("ERR no channels found\n"))
+		}
+
+		for c := range h.channels {
+			names = append(names, "#"+c+" ")
+		}
+
+		resp := strings.Join(names, ", ")
+		client.conn.Write([]byte(resp + "\n"))
+	}
+}

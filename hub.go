@@ -72,6 +72,7 @@ func (h *hub) leaveChannel(u string, c string) {
 	if client, ok := h.clients[u]; ok {
 		if channel, ok := h.channels[c]; ok {
 			delete(channel.clients, client)
+		}
 	}
 }
 

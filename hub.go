@@ -10,19 +10,22 @@ type hub struct {
 	commands        chan command
 	deregistrations chan *client
 	registrations   chan *client
+	hubLogs         chan string
 }
 
-func newHub() *hub {
+func newHub(logs chan string) *hub {
 	return &hub{
 		channels:        make(map[string]*channel),
 		clients:         make(map[string]*client),
 		commands:        make(chan command),
 		registrations:   make(chan *client),
 		deregistrations: make(chan *client),
+		hubLogs:         logs,
 	}
 }
 
 func (h *hub) run() {
+	h.hubLogs <- "Hub up and running..."
 	for {
 		select {
 		case client := <-h.registrations:

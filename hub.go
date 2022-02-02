@@ -73,32 +73,35 @@ func (h *hub) deregister(c *client) {
 			delete(channel.clients, c)
 		}
 	}
-	log.Printf("DER Executed: connection lost with %s \n", c.username)
+	log.Printf("DREG Executed: connection lost with %s \n", c.username)
 }
 
-func (h *hub) joinChannel(u string, c string) {
-	if client, ok := h.clients[u]; ok {
-		if channel, ok := h.channels[c]; ok {
+func (h *hub) joinChannel(cl *client, ch string) {
+	// var response string
+	if client, ok := h.clients[cl.username]; ok {
+		if channel, ok := h.channels[ch]; ok {
 			// Channel exists, join
 			channel.clients[client] = true
 		} else {
 			// Channel doesn't exists, create and join
-			h.channels[c] = newChannel(c)
-			h.channels[c].clients[client] = true
+			h.channels[ch] = newChannel(ch)
+			h.channels[ch].clients[client] = true
 		}
+	} else {
+		log.Printf("JOIN failed: you haven't register yet. Please use REG @username to register (change username for your own name)")
 	}
 }
 
-func (h *hub) leaveChannel(u string, c string) {
-	if client, ok := h.clients[u]; ok {
-		if channel, ok := h.channels[c]; ok {
+func (h *hub) leaveChannel(cl *client, ch string) {
+	if client, ok := h.clients[cl.username]; ok {
+		if channel, ok := h.channels[ch]; ok {
 			delete(channel.clients, client)
 		}
 	}
 }
 
-func (h *hub) message(u string, r string, m []byte) {
-	if sender, ok := h.clients[u]; ok {
+func (h *hub) message(cl *client, r string, m []byte) {
+	if sender, ok := h.clients[cl.username]; ok {
 		switch r[0] {
 		case '#':
 			if channel, ok := h.channels[r]; ok {
@@ -114,8 +117,8 @@ func (h *hub) message(u string, r string, m []byte) {
 	}
 }
 
-func (h *hub) listUsers(u string) {
-	if client, ok := h.clients[u]; ok {
+func (h *hub) listUsers(cl *client) {
+	if client, ok := h.clients[cl.username]; ok {
 		var names []string
 
 		for c := range h.clients {
@@ -127,8 +130,8 @@ func (h *hub) listUsers(u string) {
 	}
 }
 
-func (h *hub) listChannels(u string) {
-	if client, ok := h.clients[u]; ok {
+func (h *hub) listChannels(cl *client) {
+	if client, ok := h.clients[cl.username]; ok {
 		var names []string
 
 		if len(h.channels) == 0 {

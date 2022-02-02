@@ -97,7 +97,7 @@ func (c *client) join(args []byte) error {
 
 	c.outbound <- command{
 		recipient: string(channelID),
-		sender:    c.username,
+		sender:    c,
 		id:        JOIN,
 	}
 
@@ -112,7 +112,7 @@ func (c *client) leave(args []byte) error {
 
 	c.outbound <- command{
 		recipient: string(channelID),
-		sender:    c.username,
+		sender:    c,
 		id:        LEAVE,
 	}
 
@@ -145,7 +145,7 @@ func (c *client) msg(args []byte) error {
 
 	c.outbound <- command{
 		recipient: string(recipient[1:]),
-		sender:    c.username,
+		sender:    c,
 		body:      body,
 		id:        MSG,
 	}
@@ -155,14 +155,14 @@ func (c *client) msg(args []byte) error {
 
 func (c *client) chns() {
 	c.outbound <- command{
-		sender: c.username,
+		sender: c,
 		id:     CHNS,
 	}
 }
 
 func (c *client) usrs() {
 	c.outbound <- command{
-		sender: c.username,
+		sender: c,
 		id:     USRS,
 	}
 }

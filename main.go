@@ -28,6 +28,8 @@ func main() {
 			hub.registrations,
 			hub.deregistrations,
 		)
+		log.Printf("New connection received and connected to the hub service channels...")
+		conn.Write([]byte("Welcome to miniSlack! Please use REG to register along with @username (provide your username instead)\n"))
 
 		go c.read()
 	}

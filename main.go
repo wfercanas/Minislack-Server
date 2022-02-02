@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 )
@@ -14,7 +13,7 @@ func main() {
 
 	hub := newHub()
 	go hub.run()
-	fmt.Println("Server up and hub running...")
+	log.Println("Server up and hub running...")
 
 	for {
 		conn, err := ln.Accept()

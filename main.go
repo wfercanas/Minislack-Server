@@ -11,10 +11,8 @@ func main() {
 		log.Printf("%v", err)
 	}
 
-	logs := make(chan string)
-	hub := newHub(logs)
+	hub := newHub()
 	go hub.run()
-	log.Println(<-hub.hubLogs)
 
 	for {
 		conn, err := ln.Accept()
@@ -32,6 +30,5 @@ func main() {
 
 		log.Printf("New connection received and connected to the hub service channels...")
 		conn.Write([]byte("Welcome to miniSlack! Please use REG to register along with @username (provide your username instead)\n"))
-		log.Println(<-hub.hubLogs)
 	}
 }

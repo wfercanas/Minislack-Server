@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -11,22 +12,20 @@ type hub struct {
 	commands        chan command
 	deregistrations chan *client
 	registrations   chan *client
-	hubLogs         chan string
 }
 
-func newHub(logs chan string) *hub {
+func newHub() *hub {
 	return &hub{
 		channels:        make(map[string]*channel),
 		clients:         make(map[string]*client),
 		commands:        make(chan command),
 		registrations:   make(chan *client),
 		deregistrations: make(chan *client),
-		hubLogs:         logs,
 	}
 }
 
 func (h *hub) run() {
-	h.hubLogs <- "Hub up and running..."
+	log.Println("Hub up and running...")
 	for {
 		select {
 		case client := <-h.registrations:
@@ -53,14 +52,17 @@ func (h *hub) run() {
 }
 
 func (h *hub) register(c *client) {
+	var response string
 	if _, exists := h.clients[c.username]; exists {
-		c.conn.Write([]byte("REG Denied: username already taken\n"))
-		h.hubLogs <- fmt.Sprintf("REG Denied: %s was already taken", c.username)
+		response = fmt.Sprintf("REG Denied: %s was already taken\n", c.username)
+		c.conn.Write([]byte(response))
+		log.Print(response)
 		c.username = ""
 	} else {
 		h.clients[c.username] = c
-		c.conn.Write([]byte(fmt.Sprintf("REG Successful: registered as %s \n", c.username)))
-		h.hubLogs <- fmt.Sprintf("REG Successful: %s", c.username)
+		response = fmt.Sprintf("REG Successful: registered as %s \n", c.username)
+		c.conn.Write([]byte(response))
+		log.Print(response)
 	}
 }
 

@@ -14,11 +14,11 @@ type hub struct {
 
 func newHub() *hub {
 	return &hub{
+		channels:        make(map[string]*channel),
+		clients:         make(map[string]*client),
+		commands:        make(chan command),
 		registrations:   make(chan *client),
 		deregistrations: make(chan *client),
-		clients:         make(map[string]*client),
-		channels:        make(map[string]*channel),
-		commands:        make(chan command),
 	}
 }
 

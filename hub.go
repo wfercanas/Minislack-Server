@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type hub struct {
 	channels        map[string]*channel
@@ -90,5 +93,18 @@ func (h *hub) message(u string, r string, m []byte) {
 				user.conn.Write(append(m, '\n'))
 			}
 		}
+	}
+}
+
+func (h *hub) listUsers(u string) {
+	if client, ok := h.clients[u]; ok {
+		var names []string
+
+		for c, _ := range h.clients {
+			names = append(names, "@"+c+" ")
+		}
+
+		resp := strings.Join(names, ", ")
+		client.conn.Write([]byte(resp + "\n"))
 	}
 }

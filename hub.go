@@ -68,6 +68,13 @@ func (h *hub) joinChannel(u string, c string) {
 	}
 }
 
+func (h *hub) leaveChannel(u string, c string) {
+	if client, ok := h.clients[u]; ok {
+		if channel, ok := h.channels[c]; ok {
+			delete(channel.clients, client)
+	}
+}
+
 func (h *hub) message(u string, r string, m []byte) {
 	if sender, ok := h.clients[u]; ok {
 		switch r[0] {

@@ -5,6 +5,13 @@ type channel struct {
 	clients map[*client]bool
 }
 
+func newChannel(name string) *channel {
+	return &channel{
+		name:    name,
+		clients: make(map[*client]bool),
+	}
+}
+
 func (c *channel) broadcast(s string, m []byte) {
 	msg := append([]byte(s), ": "...)
 	msg = append(msg, m...)

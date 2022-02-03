@@ -27,7 +27,7 @@ func newHub() *hub {
 
 func communicate(response string, connection net.Conn) {
 	log.Print(response)
-	connection.Write([]byte(response))
+	connection.Write([]byte(string("->> " + response)))
 }
 
 func (h *hub) run() {

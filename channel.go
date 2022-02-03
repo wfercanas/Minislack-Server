@@ -13,7 +13,9 @@ func newChannel(name string) *channel {
 }
 
 func (c *channel) broadcast(s string, m []byte) {
-	msg := append([]byte(s), ": "...)
+	msg := append([]byte(s), "["...)
+	msg = append(msg, c.name...)
+	msg = append(msg, "]: "...)
 	msg = append(msg, m...)
 	msg = append(msg, '\n')
 

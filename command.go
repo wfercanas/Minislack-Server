@@ -14,6 +14,6 @@ const (
 type command struct {
 	id        ID
 	recipient string
-	sender    string
+	sender    *client
 	body      []byte
 }

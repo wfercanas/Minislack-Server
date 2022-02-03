@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"strings"
 )
 
@@ -22,6 +23,11 @@ func newHub() *hub {
 		registrations:   make(chan *client),
 		deregistrations: make(chan *client),
 	}
+}
+
+func communicate(response string, connection net.Conn) {
+	log.Print(response)
+	connection.Write([]byte(response))
 }
 
 func (h *hub) run() {
@@ -55,14 +61,12 @@ func (h *hub) register(c *client) {
 	var response string
 	if _, exists := h.clients[c.username]; exists {
 		response = fmt.Sprintf("REG Denied: %s was already taken\n", c.username)
-		c.conn.Write([]byte(response))
-		log.Print(response)
+		communicate(response, c.conn)
 		c.username = ""
 	} else {
 		h.clients[c.username] = c
 		response = fmt.Sprintf("REG Successful: registered as %s \n", c.username)
-		c.conn.Write([]byte(response))
-		log.Print(response)
+		communicate(response, c.conn)
 	}
 }
 
@@ -82,19 +86,16 @@ func (h *hub) joinChannel(cl *client, ch string) {
 		if channel, ok := h.channels[ch]; ok {
 			channel.clients[client] = true
 			response = fmt.Sprintf("JOIN Successful: %s was added to %s\n", cl.username, ch)
-			log.Print(response)
-			cl.conn.Write([]byte(response))
+			communicate(response, cl.conn)
 		} else {
 			h.channels[ch] = newChannel(ch)
 			h.channels[ch].clients[client] = true
 			response = fmt.Sprintf("JOIN Successful: channel %s was created and user %s has joined it\n", ch, cl.username)
-			log.Print(response)
-			cl.conn.Write([]byte(response))
+			communicate(response, cl.conn)
 		}
 	} else {
 		response = "JOIN Failed: user isn't registered\n"
-		log.Print(response)
-		cl.conn.Write([]byte(response))
+		communicate(response, cl.conn)
 	}
 }
 

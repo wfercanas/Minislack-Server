@@ -57,27 +57,27 @@ func (h *hub) run() {
 	}
 }
 
-func (h *hub) register(c *client) {
+func (h *hub) register(cl *client) {
 	var response string
-	if _, exists := h.clients[c.username]; exists {
-		response = fmt.Sprintf("REG Denied: %s was already taken\n", c.username)
-		communicate(response, c.conn)
-		c.username = ""
+	if _, exists := h.clients[cl.username]; exists {
+		response = fmt.Sprintf("REG Denied: %s was already taken\n", cl.username)
+		communicate(response, cl.conn)
+		cl.username = ""
 	} else {
-		h.clients[c.username] = c
-		response = fmt.Sprintf("REG Successful: registered as %s \n", c.username)
-		communicate(response, c.conn)
+		h.clients[cl.username] = cl
+		response = fmt.Sprintf("REG Successful: registered as %s \n", cl.username)
+		communicate(response, cl.conn)
 	}
 }
 
-func (h *hub) deregister(c *client) {
-	if _, exists := h.clients[c.username]; exists {
-		delete(h.clients, c.username)
+func (h *hub) deregister(cl *client) {
+	if _, exists := h.clients[cl.username]; exists {
+		delete(h.clients, cl.username)
 		for _, channel := range h.channels {
-			delete(channel.clients, c)
+			delete(channel.clients, cl)
 		}
 	}
-	log.Printf("DREG Executed: connection lost with %s \n", c.username)
+	log.Printf("DREG Executed: connection lost with %s \n", cl.username)
 }
 
 func (h *hub) joinChannel(cl *client, ch string) {

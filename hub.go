@@ -162,7 +162,7 @@ func (h *hub) listUsers(cl *client) {
 		}
 
 		enum := strings.Join(names, ", ")
-		list := "Registered users: " + enum
+		list := "->> Registered users: " + enum
 
 		client.conn.Write([]byte(list + "\n"))
 		log.Printf("USRS Successful: list delivered to %s\n", cl.username)
@@ -173,18 +173,24 @@ func (h *hub) listUsers(cl *client) {
 }
 
 func (h *hub) listChannels(cl *client) {
+	var response string
 	if client, ok := h.clients[cl.username]; ok {
 		var names []string
 
 		if len(h.channels) == 0 {
-			client.conn.Write([]byte("ERR no channels found\n"))
+			response = "CHNS Successful: There are no channels created\n"
+			communicate(response, cl.conn)
+		} else {
+			for c := range h.channels {
+				names = append(names, c)
+			}
+			enum := strings.Join(names, ", ")
+			list := "->> Channels: " + enum
+			client.conn.Write([]byte(list + "\n"))
+			log.Printf("CHNS Successful: list delivered to %s", cl.username)
 		}
-
-		for c := range h.channels {
-			names = append(names, "#"+c+" ")
-		}
-
-		resp := strings.Join(names, ", ")
-		client.conn.Write([]byte(resp + "\n"))
+	} else {
+		response = "CHNS Failed: user isn't registered\n"
+		communicate(response, cl.conn)
 	}
 }

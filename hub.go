@@ -117,19 +117,38 @@ func (h *hub) leaveChannel(cl *client, ch string) {
 }
 
 func (h *hub) message(cl *client, r string, m []byte) {
+	var response string
 	if sender, ok := h.clients[cl.username]; ok {
 		switch r[0] {
 		case '#':
 			if channel, ok := h.channels[r]; ok {
 				if _, ok := channel.clients[sender]; ok {
 					channel.broadcast(sender.username, m)
+					log.Printf("MSG Successful: %s sent a message to %s\n", cl.username, r)
+				} else {
+					response = fmt.Sprintf("MSG Failed: %s is not a member of %s\n", cl.username, r)
+					communicate(response, cl.conn)
 				}
+			} else {
+				response = fmt.Sprintf("MSG Failed: %s doesn't exist\n", r)
+				communicate(response, cl.conn)
 			}
 		case '@':
 			if user, ok := h.clients[r]; ok {
-				user.conn.Write(append(m, '\n'))
+				msg := append([]byte(cl.username), ": "...)
+				msg = append(msg, m...)
+				msg = append(msg, "\n"...)
+				user.conn.Write(msg)
+				response = fmt.Sprintf("MSG Successful: message delivered to %s\n", user.username)
+				communicate(response, cl.conn)
+			} else {
+				response = fmt.Sprintf("MSG Failed: %s is not a registered user\n", r)
+				communicate(response, cl.conn)
 			}
 		}
+	} else {
+		response = "MSG Failed: user isn't registered\n"
+		communicate(response, cl.conn)
 	}
 }
 

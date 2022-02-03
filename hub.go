@@ -77,18 +77,24 @@ func (h *hub) deregister(c *client) {
 }
 
 func (h *hub) joinChannel(cl *client, ch string) {
-	// var response string
+	var response string
 	if client, ok := h.clients[cl.username]; ok {
 		if channel, ok := h.channels[ch]; ok {
-			// Channel exists, join
 			channel.clients[client] = true
+			response = fmt.Sprintf("JOIN Successful: %s was added to %s\n", cl.username, ch)
+			log.Print(response)
+			cl.conn.Write([]byte(response))
 		} else {
-			// Channel doesn't exists, create and join
 			h.channels[ch] = newChannel(ch)
 			h.channels[ch].clients[client] = true
+			response = fmt.Sprintf("JOIN Successful: channel %s was created and user %s has joined it\n", ch, cl.username)
+			log.Print(response)
+			cl.conn.Write([]byte(response))
 		}
 	} else {
-		log.Printf("JOIN failed: you haven't register yet. Please use REG @username to register (change username for your own name)")
+		response = "JOIN Failed: user isn't registered\n"
+		log.Print(response)
+		cl.conn.Write([]byte(response))
 	}
 }
 

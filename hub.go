@@ -153,15 +153,22 @@ func (h *hub) message(cl *client, r string, m []byte) {
 }
 
 func (h *hub) listUsers(cl *client) {
+	var response string
 	if client, ok := h.clients[cl.username]; ok {
 		var names []string
 
 		for c := range h.clients {
-			names = append(names, "@"+c+" ")
+			names = append(names, c)
 		}
 
-		resp := strings.Join(names, ", ")
-		client.conn.Write([]byte(resp + "\n"))
+		enum := strings.Join(names, ", ")
+		list := "Registered users: " + enum
+
+		client.conn.Write([]byte(list + "\n"))
+		log.Printf("USRS Successful: list delivered to %s\n", cl.username)
+	} else {
+		response = "USRS Failed: user isn't registered\n"
+		communicate(response, cl.conn)
 	}
 }
 

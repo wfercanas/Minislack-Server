@@ -9,6 +9,8 @@ const (
 	MSG
 	CHNS
 	USRS
+	SEND
+	GET
 )
 
 type command struct {

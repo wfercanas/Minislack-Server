@@ -65,6 +65,14 @@ func (c *client) handle(message []byte) {
 		if err := c.msg(args); err != nil {
 			c.err(err)
 		}
+	case "SEND":
+		if err := c.send(args); err != nil {
+			c.err(err)
+		}
+	case "GET":
+		if err := c.get(args); err != nil {
+			c.err(err)
+		}
 	case "CHNS":
 		c.chns()
 	case "USRS":
@@ -149,6 +157,18 @@ func (c *client) msg(args []byte) error {
 		body:      body,
 		id:        MSG,
 	}
+
+	return nil
+}
+
+func (c *client) send(args []byte) error {
+	fmt.Println(args)
+
+	return nil
+}
+
+func (c *client) get(args []byte) error {
+	fmt.Println(args)
 
 	return nil
 }

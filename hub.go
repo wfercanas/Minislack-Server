@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"net"
@@ -23,11 +24,6 @@ func newHub() *hub {
 		registrations:   make(chan *client),
 		deregistrations: make(chan *client),
 	}
-}
-
-func communicate(response string, connection net.Conn) {
-	log.Print(response)
-	connection.Write([]byte(string("->> " + response)))
 }
 
 func (h *hub) run() {
@@ -202,7 +198,16 @@ func (h *hub) sendFile(cl *client, r string, file []byte) {
 	if sender, ok := h.clients[cl.username]; ok {
 		if channel, ok := h.channels[r]; ok {
 			if _, ok := channel.clients[sender]; ok {
-				log.Printf("Ready to save file")
+				filename := bytes.Split(file, []byte("\n"))[0]
+				body := bytes.TrimPrefix(file, filename)
+				fn := string(filename)
+				fileAddress := newFile(fn, body)
+				h.channels[r].files[fn] = fileAddress
+
+				response := fmt.Sprintf("SEND Successful: %s saved in %s\n", fn, r)
+				communicate(response, cl.conn)
+
+				channel.broadcast(cl.username, []byte(fmt.Sprintf("just saved %s file", fn)))
 			} else {
 				response = fmt.Sprintf("SEND Failed: %s is not a member of %s\n", cl.username, r)
 				communicate(response, cl.conn)
@@ -215,4 +220,9 @@ func (h *hub) sendFile(cl *client, r string, file []byte) {
 		response = "SEND Failed: user isn't registered\n"
 		communicate(response, cl.conn)
 	}
+}
+
+func communicate(response string, connection net.Conn) {
+	log.Print(response)
+	connection.Write([]byte(string("->> " + response)))
 }

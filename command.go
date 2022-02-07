@@ -9,6 +9,7 @@ const (
 	MSG
 	CHNS
 	USRS
+	FILES
 	SEND
 	GET
 )

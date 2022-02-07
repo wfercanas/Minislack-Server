@@ -1,15 +1,13 @@
 package main
 
 type file struct {
-	name string
-	size uint
-	body []byte
+	filename string
+	body     []byte
 }
 
-func newFile(name string, size uint, body []byte) *file {
+func newFile(filename string, body []byte) *file {
 	return &file{
-		name: name,
-		size: size,
-		body: body,
+		filename: filename,
+		body:     body,
 	}
 }

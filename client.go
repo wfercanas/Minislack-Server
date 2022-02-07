@@ -66,6 +66,10 @@ func (c *client) handle(message []byte) {
 		if err := c.msg(args); err != nil {
 			c.err(err)
 		}
+	case "FILES":
+		if err := c.files(args); err != nil {
+			c.err(err)
+		}
 	case "SEND":
 		if err := c.send(args); err != nil {
 			c.err(err)
@@ -157,6 +161,26 @@ func (c *client) msg(args []byte) error {
 		sender:    c,
 		body:      body,
 		id:        MSG,
+	}
+
+	return nil
+}
+
+func (c *client) files(args []byte) error {
+	channelID := bytes.TrimSpace(args)
+
+	if len(channelID) <= 1 {
+		return fmt.Errorf("->> ERR : Channel must have a name ('#name')")
+	}
+
+	if channelID[0] != '#' {
+		return fmt.Errorf("->> ERR: Please provide a channel to look for files ('#name')")
+	}
+
+	c.outbound <- command{
+		sender:    c,
+		recipient: string(channelID),
+		id:        FILES,
 	}
 
 	return nil

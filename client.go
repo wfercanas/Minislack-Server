@@ -243,7 +243,30 @@ func (c *client) send(args []byte) error {
 }
 
 func (c *client) get(args []byte) error {
-	fmt.Println(args)
+	args = bytes.TrimSpace(args)
+	if args[0] != '#' {
+		return fmt.Errorf("->> ERR: Recipient must be a channel ('#name')")
+	}
+
+	recipient := bytes.Split(args, []byte(" "))[0]
+	if len(recipient) == 1 {
+		return fmt.Errorf("->> ERR: Recipient must have a name ('#name')")
+	}
+
+	filename := bytes.TrimPrefix(args, recipient)
+	filename = bytes.TrimSpace(filename)
+
+	fn := string(filename)
+	if len(fn) == 0 {
+		return fmt.Errorf("->> ERR: Filename must be provided")
+	}
+
+	c.outbound <- command{
+		sender:    c,
+		recipient: string(recipient),
+		body:      filename,
+		id:        GET,
+	}
 
 	return nil
 }

@@ -182,33 +182,46 @@ func (h *hub) listFiles(cl *client, ch string) {
 	}
 }
 
-func (h *hub) sendFile(cl *client, r string, file []byte) {
+func (h *hub) sendFile(cl *client, ch string, file []byte) {
 	var response string
-	if sender, ok := h.clients[cl.username]; ok {
-		if channel, ok := h.channels[r]; ok {
-			if _, ok := channel.clients[sender]; ok {
-				filename := bytes.Split(file, []byte("\n"))[0]
-				body := bytes.TrimPrefix(file, filename)
-				fn := string(filename)
-				fileAddress := newFile(fn, body)
-				h.channels[r].files[fn] = fileAddress
 
-				response := fmt.Sprintf("SEND Successful: %s saved in %s\n", fn, r)
-				communicate(response, cl.conn)
-
-				channel.broadcast(cl.username, []byte(fmt.Sprintf("just saved %s file", fn)))
-			} else {
-				response = fmt.Sprintf("SEND Failed: %s is not a member of %s\n", cl.username, r)
-				communicate(response, cl.conn)
-			}
-		} else {
-			response = fmt.Sprintf("SEND Failed: channel %s doesn't exist\n", r)
-			communicate(response, cl.conn)
-		}
-	} else {
+	if _, ok := h.clients[cl.username]; !ok {
 		response = "SEND Failed: user isn't registered\n"
 		communicate(response, cl.conn)
+		return
 	}
+	sender := h.clients[cl.username]
+
+	if _, ok := h.channels[ch]; !ok {
+		response = fmt.Sprintf("SEND Failed: channel %s doesn't exist\n", ch)
+		communicate(response, cl.conn)
+		return
+	}
+	channel := h.channels[ch]
+
+	if _, ok := channel.clients[sender]; !ok {
+		response = fmt.Sprintf("SEND Failed: %s is not a member of %s\n", cl.username, ch)
+		communicate(response, cl.conn)
+		return
+	}
+
+	filename := bytes.Split(file, []byte("\n"))[0]
+	fn := string(filename)
+
+	if _, ok := channel.files[string(filename)]; ok {
+		response = fmt.Sprintf("SEND Failed: file %s already exists, use another name\n", fn)
+		communicate(response, cl.conn)
+		return
+	}
+
+	body := bytes.TrimPrefix(file, filename)
+	fileAddress := newFile(fn, body)
+	h.channels[ch].files[fn] = fileAddress
+
+	response = fmt.Sprintf("SEND Successful: %s saved in %s\n", fn, ch)
+	communicate(response, cl.conn)
+
+	channel.broadcast(cl.username, []byte(fmt.Sprintf("just saved %s file", fn)))
 }
 
 func (h *hub) listUsers(cl *client) {

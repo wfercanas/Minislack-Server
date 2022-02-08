@@ -46,6 +46,8 @@ func (h *hub) run() {
 				h.listFiles(cmd.sender, cmd.recipient)
 			case SEND:
 				h.sendFile(cmd.sender, cmd.recipient, cmd.body)
+			case GET:
+				h.getFile(cmd.sender, cmd.recipient, cmd.body)
 			case USRS:
 				h.listUsers(cmd.sender)
 			case CHNS:
@@ -222,6 +224,40 @@ func (h *hub) sendFile(cl *client, ch string, file []byte) {
 	communicate(response, cl.conn)
 
 	channel.broadcast(cl.username, []byte(fmt.Sprintf("just saved %s file", fn)))
+}
+
+func (h *hub) getFile(cl *client, ch string, filename []byte) {
+	var response string
+
+	if _, ok := h.clients[cl.username]; !ok {
+		response = "GET Failed: user isn't registered\n"
+		communicate(response, cl.conn)
+		return
+	}
+	sender := h.clients[cl.username]
+
+	if _, ok := h.channels[ch]; !ok {
+		response = fmt.Sprintf("GET Failed: channel %s doesn't exist\n", ch)
+		communicate(response, cl.conn)
+		return
+	}
+	channel := h.channels[ch]
+
+	if _, ok := channel.clients[sender]; !ok {
+		response = fmt.Sprintf("GET Failed: %s is not a member of %s\n", cl.username, ch)
+		communicate(response, cl.conn)
+		return
+	}
+
+	fn := string(filename)
+	log.Println("fn:", fn)
+	if _, ok := channel.files[fn]; !ok {
+		response = fmt.Sprintf("GET Failed: file %s doesn't exist\n", fn)
+		communicate(response, cl.conn)
+		return
+	}
+
+	cl.conn.Write([]byte("File exists\n"))
 }
 
 func (h *hub) listUsers(cl *client) {

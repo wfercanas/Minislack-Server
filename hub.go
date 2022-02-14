@@ -210,7 +210,7 @@ func (h *hub) sendFile(cl *client, ch string, file []byte) {
 	filename := bytes.Split(file, []byte("\n"))[0]
 	fn := string(filename)
 
-	if _, ok := channel.files[string(filename)]; ok {
+	if _, ok := channel.files[fn]; ok {
 		response = fmt.Sprintf("SEND Failed: file %s already exists, use another name\n", fn)
 		communicate(response, cl.conn)
 		return

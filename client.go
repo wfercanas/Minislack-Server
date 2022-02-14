@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"os"
 	"strconv"
 )
 
@@ -203,34 +202,7 @@ func (c *client) send(args []byte) error {
 		return fmt.Errorf("->> ERR: File must be saved with a name")
 	}
 
-	filepath := string(bytes.TrimSpace(bytes.TrimPrefix(args, filename)))
-	filepathStat, err := os.Stat(filepath)
-	if err != nil {
-		return err
-	}
-
-	if !filepathStat.Mode().IsRegular() {
-		return fmt.Errorf("->> ERR: %s is not a regular file", filepath)
-	}
-
-	buffer := make([]byte, 8)
-	body := []byte(fmt.Sprintf(string(filename) + "\n"))
-
-	file, err := os.Open(filepath)
-	if err != nil {
-		return err
-	}
-
-	for {
-		n, err := file.Read(buffer)
-		if err != nil && err != io.EOF {
-			return err
-		}
-		if n == 0 {
-			break
-		}
-		body = append(body, buffer[:n]...)
-	}
+	body := bytes.TrimSpace(bytes.TrimPrefix(args, filename))
 
 	c.outbound <- command{
 		recipient: string(recipient),

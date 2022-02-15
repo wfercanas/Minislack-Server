@@ -18,5 +18,6 @@ type command struct {
 	id        ID
 	recipient string
 	sender    *client
+	header    []byte
 	body      []byte
 }

@@ -3,12 +3,14 @@ package main
 type channel struct {
 	name    string
 	clients map[*client]bool
+	files   map[string]*file
 }
 
 func newChannel(name string) *channel {
 	return &channel{
 		name:    name,
 		clients: make(map[*client]bool),
+		files:   make(map[string]*file),
 	}
 }
 

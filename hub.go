@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"net"
@@ -45,7 +44,7 @@ func (h *hub) run() {
 			case FILES:
 				h.listFiles(cmd.sender, cmd.recipient)
 			case SEND:
-				h.sendFile(cmd.sender, cmd.recipient, cmd.body)
+				h.sendFile(cmd.sender, cmd.recipient, cmd.header, cmd.body)
 			case GET:
 				h.getFile(cmd.sender, cmd.recipient, cmd.body)
 			case USRS:
@@ -184,7 +183,7 @@ func (h *hub) listFiles(cl *client, ch string) {
 	}
 }
 
-func (h *hub) sendFile(cl *client, ch string, file []byte) {
+func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
 	var response string
 
 	if _, ok := h.clients[cl.username]; !ok {
@@ -207,17 +206,14 @@ func (h *hub) sendFile(cl *client, ch string, file []byte) {
 		return
 	}
 
-	filename := bytes.Split(file, []byte("\n"))[0]
 	fn := string(filename)
-
 	if _, ok := channel.files[fn]; ok {
 		response = fmt.Sprintf("SEND Failed: file %s already exists, use another name\n", fn)
 		communicate(response, cl.conn)
 		return
 	}
 
-	body := bytes.TrimPrefix(file, filename)
-	fileAddress := newFile(fn, body)
+	fileAddress := newFile(fn, file)
 	h.channels[ch].files[fn] = fileAddress
 
 	response = fmt.Sprintf("SEND Successful: %s saved in %s\n", fn, ch)
@@ -305,5 +301,5 @@ func (h *hub) listChannels(cl *client) {
 
 func communicate(response string, connection net.Conn) {
 	log.Print(response)
-	connection.Write([]byte(string("->> " + response)))
+	connection.Write([]byte(string("->> " + response + "\n")))
 }

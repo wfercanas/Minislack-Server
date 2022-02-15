@@ -1,4 +1,4 @@
-# Mini Slack
+# Minislack - Server
 
 ## Project Description
 

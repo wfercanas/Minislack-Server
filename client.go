@@ -9,7 +9,9 @@ import (
 	"strconv"
 )
 
-var DELIMITER = []byte(`\r\n`)
+var MSG_DELIMITER = []byte(`\r\n`)
+var FILE_DELIMITER = []byte(" >> ")
+var BREAK_LINE_DELIMITER = []byte("//")
 
 type client struct {
 	conn       net.Conn
@@ -143,7 +145,7 @@ func (c *client) msg(args []byte) error {
 	}
 
 	args = bytes.TrimSpace(bytes.TrimPrefix(args, recipient))
-	l := bytes.Split(args, DELIMITER)[0]
+	l := bytes.Split(args, MSG_DELIMITER)[0]
 	length, err := strconv.Atoi(string(l))
 	if err != nil {
 		return fmt.Errorf("->> ERR: Body length must be present")
@@ -152,7 +154,7 @@ func (c *client) msg(args []byte) error {
 		return fmt.Errorf("->> ERR: Body length must be at least 1")
 	}
 
-	padding := len(l) + len(DELIMITER) // Size of the body length + delimiter
+	padding := len(l) + len(MSG_DELIMITER) // Size of the body length + delimiter
 	body := args[padding : padding+length]
 
 	c.outbound <- command{
@@ -202,11 +204,15 @@ func (c *client) send(args []byte) error {
 		return fmt.Errorf("->> ERR: File must be saved with a name")
 	}
 
-	body := bytes.TrimSpace(bytes.TrimPrefix(args, filename))
+	file := bytes.TrimPrefix(args, filename)
+	file = bytes.Split(file, FILE_DELIMITER)[1]
+	splittedFile := bytes.Split(file, BREAK_LINE_DELIMITER)
+	body := bytes.Join(splittedFile, []byte("\n"))
 
 	c.outbound <- command{
 		recipient: string(recipient),
 		sender:    c,
+		header:    filename,
 		body:      body,
 		id:        SEND,
 	}
@@ -225,10 +231,9 @@ func (c *client) get(args []byte) error {
 		return fmt.Errorf("->> ERR: Recipient must have a name ('#name')")
 	}
 
-	filename := bytes.TrimPrefix(args, recipient)
-	filename = bytes.TrimSpace(filename)
-
+	filename := bytes.TrimSpace(bytes.TrimPrefix(args, recipient))
 	fn := string(filename)
+
 	if len(fn) == 0 {
 		return fmt.Errorf("->> ERR: Filename must be provided")
 	}

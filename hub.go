@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"net"
@@ -246,14 +247,23 @@ func (h *hub) getFile(cl *client, ch string, filename []byte) {
 	}
 
 	fn := string(filename)
-	log.Println("fn:", fn)
 	if _, ok := channel.files[fn]; !ok {
 		response = fmt.Sprintf("GET Failed: file %s doesn't exist\n", fn)
 		communicate(response, cl.conn)
 		return
 	}
 
-	cl.conn.Write([]byte("File exists\n"))
+	var payload []byte
+	formattedBody := replaceReturns(channel.files[fn].body)
+
+	payload = append(payload, []byte("FILE ")...)
+	payload = append(payload, filename...)
+	payload = append(payload, []byte(" ")...)
+	payload = append(payload, formattedBody...)
+
+	response = fmt.Sprintf("GET Successful: sending %s file", fn)
+	communicate(response, cl.conn)
+	cl.conn.Write(payload)
 }
 
 func (h *hub) listUsers(cl *client) {
@@ -302,4 +312,11 @@ func (h *hub) listChannels(cl *client) {
 func communicate(response string, connection net.Conn) {
 	log.Print(response)
 	connection.Write([]byte(string("->> " + response + "\n")))
+}
+
+func replaceReturns(body []byte) []byte {
+	splittedBody := bytes.Split(body, []byte("\n"))
+	joinedBody := bytes.Join(splittedBody, []byte("//"))
+	joinedBody = append(joinedBody, '\n')
+	return joinedBody
 }

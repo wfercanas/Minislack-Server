@@ -284,22 +284,25 @@ func (h *hub) getFile(cl *client, ch string, filename []byte) {
 
 func (h *hub) listUsers(cl *client) {
 	var response string
-	if client, ok := h.clients[cl.username]; ok {
-		var names []string
 
-		for c := range h.clients {
-			names = append(names, c)
-		}
-
-		enum := strings.Join(names, ", ")
-		list := "->> Registered users: " + enum
-
-		client.conn.Write([]byte(list + "\n"))
-		log.Printf("USRS Successful: list delivered to %s\n", cl.username)
-	} else {
+	if !h.userRegistered(cl.username) {
 		response = "USRS Failed: user isn't registered\n"
 		communicate(response, cl.conn)
+		return
 	}
+	client := h.clients[cl.username]
+
+	var names []string
+
+	for c := range h.clients {
+		names = append(names, c)
+	}
+
+	enum := strings.Join(names, ", ")
+	list := "->> Registered users: " + enum
+
+	client.conn.Write([]byte(list + "\n"))
+	log.Printf("USRS Successful: list delivered to %s\n", cl.username)
 }
 
 func (h *hub) listChannels(cl *client) {

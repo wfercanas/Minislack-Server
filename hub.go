@@ -61,7 +61,7 @@ func (h *hub) run() {
 
 func (h *hub) register(cl *client) {
 	var response string
-	if _, exists := h.clients[cl.username]; exists {
+	if h.userRegistered(cl.username) {
 		response = fmt.Sprintf("REG Denied: %s was already taken\n", cl.username)
 		communicate(response, cl.conn)
 		cl.username = ""
@@ -73,13 +73,13 @@ func (h *hub) register(cl *client) {
 }
 
 func (h *hub) deregister(cl *client) {
-	if _, exists := h.clients[cl.username]; exists {
+	if h.userRegistered(cl.username) {
 		delete(h.clients, cl.username)
 		for _, channel := range h.channels {
 			delete(channel.clients, cl)
 		}
+		log.Printf("DREG Executed: connection lost with %s \n", cl.username)
 	}
-	log.Printf("DREG Executed: connection lost with %s \n", cl.username)
 }
 
 func (h *hub) joinChannel(cl *client, ch string) {

@@ -203,7 +203,7 @@ func (h *hub) listFiles(cl *client, ch string) {
 func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
 	var response string
 
-	if _, ok := h.clients[cl.username]; !ok {
+	if !h.userRegistered(cl.username) {
 		response = "SEND Failed: user isn't registered\n"
 		communicate(response, cl.conn)
 		return

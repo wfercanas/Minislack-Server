@@ -242,7 +242,7 @@ func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
 func (h *hub) getFile(cl *client, ch string, filename []byte) {
 	var response string
 
-	if _, ok := h.clients[cl.username]; !ok {
+	if !h.userRegistered(cl.username) {
 		response = "GET Failed: user isn't registered\n"
 		communicate(response, cl.conn)
 		return

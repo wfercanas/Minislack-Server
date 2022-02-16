@@ -169,30 +169,33 @@ func (h *hub) message(cl *client, recipient string, m []byte) {
 
 func (h *hub) listFiles(cl *client, ch string) {
 	var response string
-	if sender, ok := h.clients[cl.username]; ok {
-		if channel, ok := h.channels[ch]; ok {
-			if _, ok := h.channels[ch].clients[sender]; ok {
-				var files []string
 
-				for file := range channel.files {
-					files = append(files, file)
-				}
+	if !h.userRegistered(cl.username) {
+		response = "FILES Failed: user isn't registered\n"
+		communicate(response, cl.conn)
+		return
+	}
+	sender := h.clients[cl.username]
 
-				enum := strings.Join(files, "\n")
-				list := "Channel files ->>\n" + enum
+	if channel, ok := h.channels[ch]; ok {
+		if _, ok := h.channels[ch].clients[sender]; ok {
+			var files []string
 
-				cl.conn.Write([]byte(list + "\n"))
-				log.Printf("FILES Successful: list delivered to %s\n", cl.username)
-			} else {
-				response = fmt.Sprintf("FILES Failed: %s is not a member of %s\n", cl.username, ch)
-				communicate(response, cl.conn)
+			for file := range channel.files {
+				files = append(files, file)
 			}
+
+			enum := strings.Join(files, "\n")
+			list := "Channel files ->>\n" + enum
+
+			cl.conn.Write([]byte(list + "\n"))
+			log.Printf("FILES Successful: list delivered to %s\n", cl.username)
 		} else {
-			response = fmt.Sprintf("FILES Failed: channel %s doesn't exist\n", ch)
+			response = fmt.Sprintf("FILES Failed: %s is not a member of %s\n", cl.username, ch)
 			communicate(response, cl.conn)
 		}
 	} else {
-		response = "FILES Failed: user isn't registered\n"
+		response = fmt.Sprintf("FILES Failed: channel %s doesn't exist\n", ch)
 		communicate(response, cl.conn)
 	}
 }

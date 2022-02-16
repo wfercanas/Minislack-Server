@@ -84,36 +84,42 @@ func (h *hub) deregister(cl *client) {
 
 func (h *hub) joinChannel(cl *client, ch string) {
 	var response string
-	if client, ok := h.clients[cl.username]; ok {
-		if channel, ok := h.channels[ch]; ok {
-			channel.clients[client] = true
-			response = fmt.Sprintf("JOIN Successful: %s was added to %s\n", cl.username, ch)
-			communicate(response, cl.conn)
-		} else {
-			h.channels[ch] = newChannel(ch)
-			h.channels[ch].clients[client] = true
-			response = fmt.Sprintf("JOIN Successful: channel %s was created and user %s has joined it\n", ch, cl.username)
-			communicate(response, cl.conn)
-		}
-	} else {
+
+	if !h.userRegistered(cl.username) {
 		response = "JOIN Failed: user isn't registered\n"
+		communicate(response, cl.conn)
+		return
+	}
+	client := h.clients[cl.username]
+
+	if channel, ok := h.channels[ch]; ok {
+		channel.clients[client] = true
+		response = fmt.Sprintf("JOIN Successful: %s was added to %s\n", cl.username, ch)
+		communicate(response, cl.conn)
+	} else {
+		h.channels[ch] = newChannel(ch)
+		h.channels[ch].clients[client] = true
+		response = fmt.Sprintf("JOIN Successful: channel %s was created and user %s has joined it\n", ch, cl.username)
 		communicate(response, cl.conn)
 	}
 }
 
 func (h *hub) leaveChannel(cl *client, ch string) {
 	var response string
-	if client, ok := h.clients[cl.username]; ok {
-		if channel, ok := h.channels[ch]; ok {
-			delete(channel.clients, client)
-			response = fmt.Sprintf("LEAVE Successful: %s was removed from %s\n", cl.username, ch)
-			communicate(response, cl.conn)
-		} else {
-			response = fmt.Sprintf("LEAVE Failed: %s doesn't exist\n", ch)
-			communicate(response, cl.conn)
-		}
-	} else {
+
+	if !h.userRegistered(cl.username) {
 		response = "LEAVE Failed: user isn't registered\n"
+		communicate(response, cl.conn)
+		return
+	}
+	client := h.clients[cl.username]
+
+	if channel, ok := h.channels[ch]; ok {
+		delete(channel.clients, client)
+		response = fmt.Sprintf("LEAVE Successful: %s was removed from %s\n", cl.username, ch)
+		communicate(response, cl.conn)
+	} else {
+		response = fmt.Sprintf("LEAVE Failed: %s doesn't exist\n", ch)
 		communicate(response, cl.conn)
 	}
 }

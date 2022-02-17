@@ -79,8 +79,6 @@ func (h *hub) deregister(cl *client) {
 }
 
 func (h *hub) joinChannel(cl *client, ch string) {
-	var response string
-
 	if !h.userRegistered(cl.username) {
 		commUserNotRegistered("JOIN", cl.conn)
 		return
@@ -89,16 +87,12 @@ func (h *hub) joinChannel(cl *client, ch string) {
 
 	if !h.channelExists(ch) {
 		h.channels[ch] = newChannel(ch)
-		h.channels[ch].clients[client] = true
-		response = fmt.Sprintf("JOIN Successful: channel %s was created and user %s has joined it\n", ch, cl.username)
-		communicate(response, cl.conn)
-		return
+		commChannelCreated("JOIN", ch, cl.conn)
 	}
 	channel := h.channels[ch]
 
 	channel.clients[client] = true
-	response = fmt.Sprintf("JOIN Successful: %s was added to %s\n", cl.username, ch)
-	communicate(response, cl.conn)
+	commUserJoinedChannel("JOIN", ch, cl.username, cl.conn)
 }
 
 func (h *hub) leaveChannel(cl *client, ch string) {

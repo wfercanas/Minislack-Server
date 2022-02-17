@@ -99,8 +99,8 @@ func (h *hub) joinChannel(cl *client, ch string) {
 		communicate(response, cl.conn)
 		return
 	}
-
 	channel := h.channels[ch]
+
 	channel.clients[client] = true
 	response = fmt.Sprintf("JOIN Successful: %s was added to %s\n", cl.username, ch)
 	communicate(response, cl.conn)
@@ -148,13 +148,13 @@ func (h *hub) message(cl *client, recipient string, m []byte) {
 		}
 		channel := h.channels[recipient]
 
-		if _, ok := channel.clients[sender]; ok {
-			channel.broadcast(sender.username, m)
-			log.Printf("MSG Successful: %s sent a message to %s\n", cl.username, recipient)
-		} else {
+		if !h.userIsMember(channel, sender) {
 			response = fmt.Sprintf("MSG Failed: %s is not a member of %s\n", cl.username, recipient)
 			communicate(response, cl.conn)
+			return
 		}
+		channel.broadcast(sender.username, m)
+		log.Printf("MSG Successful: %s sent a message to %s\n", cl.username, recipient)
 	case '@':
 		if !h.userRegistered(recipient) {
 			response = fmt.Sprintf("MSG Failed: %s is not a registered user\n", recipient)

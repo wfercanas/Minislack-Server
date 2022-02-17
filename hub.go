@@ -234,7 +234,7 @@ func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
 	}
 	channel := h.channels[ch]
 
-	if _, ok := channel.clients[sender]; !ok {
+	if !h.userIsMember(channel, sender) {
 		response = fmt.Sprintf("SEND Failed: %s is not a member of %s\n", cl.username, ch)
 		communicate(response, cl.conn)
 		return

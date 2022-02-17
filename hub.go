@@ -105,8 +105,7 @@ func (h *hub) leaveChannel(cl *client, ch string) {
 	var response string
 
 	if !h.userRegistered(cl.username) {
-		response = "LEAVE Failed: user isn't registered\n"
-		communicate(response, cl.conn)
+		commUserNotRegistered(cl.conn)
 		return
 	}
 	client := h.clients[cl.username]

@@ -82,8 +82,7 @@ func (h *hub) joinChannel(cl *client, ch string) {
 	var response string
 
 	if !h.userRegistered(cl.username) {
-		response = "JOIN Failed: user isn't registered\n"
-		communicate(response, cl.conn)
+		commUserNotRegistered(cl.conn)
 		return
 	}
 	client := h.clients[cl.username]

@@ -259,7 +259,7 @@ func (h *hub) getFile(cl *client, ch string, filename []byte) {
 	}
 	sender := h.clients[cl.username]
 
-	if _, ok := h.channels[ch]; !ok {
+	if !h.channelExists(ch) {
 		response = fmt.Sprintf("GET Failed: channel %s doesn't exist\n", ch)
 		communicate(response, cl.conn)
 		return

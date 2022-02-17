@@ -59,14 +59,12 @@ func (h *hub) run() {
 }
 
 func (h *hub) register(cl *client) {
-	var response string
 	if h.userRegistered(cl.username) {
 		commUsernameTaken(cl.username, cl.conn)
 		cl.username = ""
 	} else {
 		h.clients[cl.username] = cl
-		response = fmt.Sprintf("REG Successful: registered as %s \n", cl.username)
-		communicate(response, cl.conn)
+		commRegisterSuccess(cl.username, cl.conn)
 	}
 }
 

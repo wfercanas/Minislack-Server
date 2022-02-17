@@ -251,8 +251,7 @@ func (h *hub) getFile(cl *client, ch string, filename []byte) {
 	var response string
 
 	if !h.userRegistered(cl.username) {
-		response = "GET Failed: user isn't registered\n"
-		communicate(response, cl.conn)
+		commUserNotRegistered("GET", cl.conn)
 		return
 	}
 	sender := h.clients[cl.username]

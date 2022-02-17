@@ -133,8 +133,7 @@ func (h *hub) message(cl *client, recipient string, m []byte) {
 	var response string
 
 	if !h.userRegistered(cl.username) {
-		response = "MSG Failed: user isn't registered\n"
-		communicate(response, cl.conn)
+		commUserNotRegistered(cl.conn)
 		return
 	}
 	sender := h.clients[cl.username]

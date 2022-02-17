@@ -212,8 +212,7 @@ func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
 	var response string
 
 	if !h.userRegistered(cl.username) {
-		response = "SEND Failed: user isn't registered\n"
-		communicate(response, cl.conn)
+		commUserNotRegistered("SEND", cl.conn)
 		return
 	}
 	sender := h.clients[cl.username]

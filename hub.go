@@ -214,7 +214,6 @@ func (h *hub) listFiles(cl *client, ch string) {
 
 	cl.conn.Write([]byte(list + "\n"))
 	log.Printf("FILES Successful: list delivered to %s\n", cl.username)
-
 }
 
 func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
@@ -273,7 +272,7 @@ func (h *hub) getFile(cl *client, ch string, filename []byte) {
 	}
 	channel := h.channels[ch]
 
-	if _, ok := channel.clients[sender]; !ok {
+	if !h.userIsMember(channel, sender) {
 		response = fmt.Sprintf("GET Failed: %s is not a member of %s\n", cl.username, ch)
 		communicate(response, cl.conn)
 		return

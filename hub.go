@@ -116,14 +116,17 @@ func (h *hub) leaveChannel(cl *client, ch string) {
 	}
 	client := h.clients[cl.username]
 
-	if channel, ok := h.channels[ch]; ok {
-		delete(channel.clients, client)
-		response = fmt.Sprintf("LEAVE Successful: %s was removed from %s\n", cl.username, ch)
+	if !h.channelExists(ch) {
+		response = fmt.Sprintf("LEAVE Failed: channel %s doesn't exist\n", ch)
 		communicate(response, cl.conn)
-	} else {
-		response = fmt.Sprintf("LEAVE Failed: %s doesn't exist\n", ch)
-		communicate(response, cl.conn)
+		return
 	}
+	channel := h.channels[ch]
+
+	delete(channel.clients, client)
+	response = fmt.Sprintf("LEAVE Successful: %s was removed from %s\n", cl.username, ch)
+	communicate(response, cl.conn)
+
 }
 
 func (h *hub) message(cl *client, recipient string, m []byte) {

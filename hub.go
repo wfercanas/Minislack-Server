@@ -92,16 +92,18 @@ func (h *hub) joinChannel(cl *client, ch string) {
 	}
 	client := h.clients[cl.username]
 
-	if channel, ok := h.channels[ch]; ok {
-		channel.clients[client] = true
-		response = fmt.Sprintf("JOIN Successful: %s was added to %s\n", cl.username, ch)
-		communicate(response, cl.conn)
-	} else {
+	if !h.channelExists(ch) {
 		h.channels[ch] = newChannel(ch)
 		h.channels[ch].clients[client] = true
 		response = fmt.Sprintf("JOIN Successful: channel %s was created and user %s has joined it\n", ch, cl.username)
 		communicate(response, cl.conn)
+		return
 	}
+
+	channel := h.channels[ch]
+	channel.clients[client] = true
+	response = fmt.Sprintf("JOIN Successful: %s was added to %s\n", cl.username, ch)
+	communicate(response, cl.conn)
 }
 
 func (h *hub) leaveChannel(cl *client, ch string) {

@@ -21,7 +21,7 @@ func commRegisterSuccess(username string, client net.Conn) {
 	communicate(response, client)
 }
 
-func commUserNotRegistered(client net.Conn) {
-	response := "JOIN Failed: user isn't registered\n"
+func commUserNotRegistered(command string, client net.Conn) {
+	response := fmt.Sprintf("%s Failed: user isn't registered\n", command)
 	communicate(response, client)
 }

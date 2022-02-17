@@ -82,7 +82,7 @@ func (h *hub) joinChannel(cl *client, ch string) {
 	var response string
 
 	if !h.userRegistered(cl.username) {
-		commUserNotRegistered(cl.conn)
+		commUserNotRegistered("JOIN", cl.conn)
 		return
 	}
 	client := h.clients[cl.username]
@@ -105,7 +105,7 @@ func (h *hub) leaveChannel(cl *client, ch string) {
 	var response string
 
 	if !h.userRegistered(cl.username) {
-		commUserNotRegistered(cl.conn)
+		commUserNotRegistered("LEAVE", cl.conn)
 		return
 	}
 	client := h.clients[cl.username]
@@ -133,7 +133,7 @@ func (h *hub) message(cl *client, recipient string, m []byte) {
 	var response string
 
 	if !h.userRegistered(cl.username) {
-		commUserNotRegistered(cl.conn)
+		commUserNotRegistered("MSG", cl.conn)
 		return
 	}
 	sender := h.clients[cl.username]

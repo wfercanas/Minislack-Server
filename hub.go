@@ -177,8 +177,7 @@ func (h *hub) listFiles(cl *client, ch string) {
 	var response string
 
 	if !h.userRegistered(cl.username) {
-		response = "FILES Failed: user isn't registered\n"
-		communicate(response, cl.conn)
+		commUserNotRegistered("FILES", cl.conn)
 		return
 	}
 	sender := h.clients[cl.username]

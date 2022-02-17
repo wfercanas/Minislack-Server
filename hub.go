@@ -279,7 +279,7 @@ func (h *hub) getFile(cl *client, ch string, filename []byte) {
 	}
 
 	fn := string(filename)
-	if _, ok := channel.files[fn]; !ok {
+	if !h.fileExists(channel, fn) {
 		response = fmt.Sprintf("GET Failed: file %s doesn't exist\n", fn)
 		communicate(response, cl.conn)
 		return

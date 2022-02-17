@@ -220,7 +220,7 @@ func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
 	}
 	sender := h.clients[cl.username]
 
-	if _, ok := h.channels[ch]; !ok {
+	if !h.channelExists(ch) {
 		response = fmt.Sprintf("SEND Failed: channel %s doesn't exist\n", ch)
 		communicate(response, cl.conn)
 		return

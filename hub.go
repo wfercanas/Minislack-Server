@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"net"
 	"strings"
 )
 
@@ -62,8 +61,7 @@ func (h *hub) run() {
 func (h *hub) register(cl *client) {
 	var response string
 	if h.userRegistered(cl.username) {
-		response = fmt.Sprintf("REG Denied: %s was already taken\n", cl.username)
-		communicate(response, cl.conn)
+		commUsernameTaken(cl.username, cl.conn)
 		cl.username = ""
 	} else {
 		h.clients[cl.username] = cl
@@ -346,11 +344,6 @@ func (h *hub) listChannels(cl *client) {
 		client.conn.Write([]byte(list + "\n"))
 		log.Printf("CHNS Successful: list delivered to %s", cl.username)
 	}
-}
-
-func communicate(response string, connection net.Conn) {
-	log.Print(response)
-	connection.Write([]byte(string("->> " + response + "\n")))
 }
 
 func replaceReturns(body []byte) []byte {

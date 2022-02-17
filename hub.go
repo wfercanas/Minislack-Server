@@ -290,11 +290,8 @@ func (h *hub) getFile(cl *client, ch string, filename []byte) {
 }
 
 func (h *hub) listUsers(cl *client) {
-	var response string
-
 	if !h.userRegistered(cl.username) {
-		response = "USRS Failed: user isn't registered\n"
-		communicate(response, cl.conn)
+		commUserNotRegistered("USRS", cl.conn)
 		return
 	}
 	client := h.clients[cl.username]
@@ -316,8 +313,7 @@ func (h *hub) listChannels(cl *client) {
 	var response string
 
 	if !h.userRegistered(cl.username) {
-		response = "CHNS Failed: user isn't registered\n"
-		communicate(response, cl.conn)
+		commUserNotRegistered("CHNS", cl.conn)
 		return
 	}
 	client := h.clients[cl.username]

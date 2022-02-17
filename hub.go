@@ -197,22 +197,23 @@ func (h *hub) listFiles(cl *client, ch string) {
 	}
 	channel := h.channels[ch]
 
-	if _, ok := h.channels[ch].clients[sender]; ok {
-		var files []string
-
-		for file := range channel.files {
-			files = append(files, file)
-		}
-
-		enum := strings.Join(files, "\n")
-		list := "Channel files ->>\n" + enum
-
-		cl.conn.Write([]byte(list + "\n"))
-		log.Printf("FILES Successful: list delivered to %s\n", cl.username)
-	} else {
+	if !h.userIsMember(channel, sender) {
 		response = fmt.Sprintf("FILES Failed: %s is not a member of %s\n", cl.username, ch)
 		communicate(response, cl.conn)
+		return
 	}
+
+	var files []string
+
+	for file := range channel.files {
+		files = append(files, file)
+	}
+
+	enum := strings.Join(files, "\n")
+	list := "Channel files ->>\n" + enum
+
+	cl.conn.Write([]byte(list + "\n"))
+	log.Printf("FILES Successful: list delivered to %s\n", cl.username)
 
 }
 

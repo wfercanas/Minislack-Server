@@ -14,3 +14,8 @@ func (h *hub) userIsMember(ch *channel, cl *client) bool {
 	_, exists := ch.clients[cl]
 	return exists
 }
+
+func (h *hub) fileExists(ch *channel, filename string) bool {
+	_, exists := ch.files[filename]
+	return exists
+}

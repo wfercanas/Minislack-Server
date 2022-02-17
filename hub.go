@@ -141,16 +141,18 @@ func (h *hub) message(cl *client, recipient string, m []byte) {
 
 	switch recipient[0] {
 	case '#':
-		if channel, ok := h.channels[recipient]; ok {
-			if _, ok := channel.clients[sender]; ok {
-				channel.broadcast(sender.username, m)
-				log.Printf("MSG Successful: %s sent a message to %s\n", cl.username, recipient)
-			} else {
-				response = fmt.Sprintf("MSG Failed: %s is not a member of %s\n", cl.username, recipient)
-				communicate(response, cl.conn)
-			}
+		if !h.channelExists(recipient) {
+			response = fmt.Sprintf("MSG Failed: channel %s doesn't exist\n", recipient)
+			communicate(response, cl.conn)
+			return
+		}
+		channel := h.channels[recipient]
+
+		if _, ok := channel.clients[sender]; ok {
+			channel.broadcast(sender.username, m)
+			log.Printf("MSG Successful: %s sent a message to %s\n", cl.username, recipient)
 		} else {
-			response = fmt.Sprintf("MSG Failed: %s doesn't exist\n", recipient)
+			response = fmt.Sprintf("MSG Failed: %s is not a member of %s\n", cl.username, recipient)
 			communicate(response, cl.conn)
 		}
 	case '@':

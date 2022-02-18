@@ -170,15 +170,19 @@ func (h *hub) listFiles(cl *client, ch string) {
 
 	var files []string
 
-	for file := range channel.files {
-		files = append(files, file)
+	if len(channel.files) == 0 {
+		commChannelWithNoFiles("FILES", ch, cl.conn)
+	} else {
+		for file := range channel.files {
+			files = append(files, file)
+		}
+
+		enum := strings.Join(files, "\n")
+		list := "Channel files ->>\n" + enum
+
+		cl.conn.Write([]byte(list + "\n"))
+		log.Printf("FILES Successful: list delivered to %s\n", cl.username)
 	}
-
-	enum := strings.Join(files, "\n")
-	list := "Channel files ->>\n" + enum
-
-	cl.conn.Write([]byte(list + "\n"))
-	log.Printf("FILES Successful: list delivered to %s\n", cl.username)
 }
 
 func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {

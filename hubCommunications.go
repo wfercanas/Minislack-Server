@@ -80,3 +80,8 @@ func commSendingFile(command string, filename string, client net.Conn) {
 	response := fmt.Sprintf("%s Successful: sending %s file", command, filename)
 	communicate(response, client)
 }
+
+func commNoChannelsCreated(command string, client net.Conn) {
+	response := fmt.Sprintf("%s Successful: There are no channels created\n", command)
+	communicate(response, client)
+}

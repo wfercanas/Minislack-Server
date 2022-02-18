@@ -75,3 +75,8 @@ func commFileDoesntExist(command string, ch string, filename string, client net.
 	response := fmt.Sprintf("%s Failed: file %s doesn't exist in channel %s\n", command, filename, ch)
 	communicate(response, client)
 }
+
+func commSendingFile(command string, filename string, client net.Conn) {
+	response := fmt.Sprintf("%s Successful: sending %s file", command, filename)
+	communicate(response, client)
+}

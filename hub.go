@@ -177,7 +177,7 @@ func (h *hub) listFiles(cl *client, ch string) {
 			files = append(files, file)
 		}
 
-		enum := strings.Join(files, "\n")
+		enum := strings.Join(files, ", ")
 		list := "Channel files ->>\n" + enum
 
 		cl.conn.Write([]byte(list + "\n"))

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"strings"
@@ -293,11 +292,4 @@ func (h *hub) listChannels(cl *client) {
 		client.conn.Write([]byte(list + "\n"))
 		log.Printf("CHNS Successful: list delivered to %s", cl.username)
 	}
-}
-
-func replaceReturns(body []byte) []byte {
-	splittedBody := bytes.Split(body, []byte("\n"))
-	joinedBody := bytes.Join(splittedBody, []byte("//"))
-	joinedBody = append(joinedBody, '\n')
-	return joinedBody
 }

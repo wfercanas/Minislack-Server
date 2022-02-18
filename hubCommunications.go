@@ -35,3 +35,8 @@ func commUserJoinedChannel(command string, ch string, username string, client ne
 	response := fmt.Sprintf("%s Successful: %s was added to %s\n", command, username, ch)
 	communicate(response, client)
 }
+
+func commChannelDoesntExist(command string, ch string, client net.Conn) {
+	response := fmt.Sprintf("%s Failed: channel %s doesn't exist\n", command, ch)
+	communicate(response, client)
+}

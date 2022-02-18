@@ -55,3 +55,8 @@ func commDestinationUserNotRegistered(command string, username string, client ne
 	response := fmt.Sprintf("%s Failed: %s is not a registered user\n", command, username)
 	communicate(response, client)
 }
+
+func commDirectMessageDelivered(command string, username string, client net.Conn) {
+	response := fmt.Sprintf("%s Successful: direct message delivered to %s\n", command, username)
+	communicate(response, client)
+}

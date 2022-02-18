@@ -40,3 +40,8 @@ func commChannelDoesntExist(command string, ch string, client net.Conn) {
 	response := fmt.Sprintf("%s Failed: channel %s doesn't exist\n", command, ch)
 	communicate(response, client)
 }
+
+func commUserIsNotMember(command string, ch string, username string, client net.Conn) {
+	response := fmt.Sprintf("%s Failed: %s is not a member of %s\n", command, username, ch)
+	communicate(response, client)
+}

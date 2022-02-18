@@ -111,8 +111,7 @@ func (h *hub) leaveChannel(cl *client, ch string) {
 	channel := h.channels[ch]
 
 	if !h.userIsMember(channel, client) {
-		response = fmt.Sprintf("LEAVE Failed: %s is not a member of %s\n", cl.username, ch)
-		communicate(response, cl.conn)
+		commUserIsNotMember("LEAVE", ch, cl.username, cl.conn)
 		return
 	}
 

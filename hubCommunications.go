@@ -65,3 +65,8 @@ func commFilenameAlreadyUsed(command string, filename string, client net.Conn) {
 	response := fmt.Sprintf("%s Failed: file %s already exists, use another name\n", command, filename)
 	communicate(response, client)
 }
+
+func commFileSaved(command string, ch string, filename string, client net.Conn) {
+	response := fmt.Sprintf("%s Successful: %s saved in %s\n", command, filename, ch)
+	communicate(response, client)
+}

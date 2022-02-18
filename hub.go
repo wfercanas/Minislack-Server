@@ -274,8 +274,6 @@ func (h *hub) listUsers(cl *client) {
 }
 
 func (h *hub) listChannels(cl *client) {
-	var response string
-
 	if !h.userRegistered(cl.username) {
 		commUserNotRegistered("CHNS", cl.conn)
 		return
@@ -285,8 +283,7 @@ func (h *hub) listChannels(cl *client) {
 	var names []string
 
 	if len(h.channels) == 0 {
-		response = "CHNS Successful: There are no channels created\n"
-		communicate(response, cl.conn)
+		commNoChannelsCreated("CHNS", cl.conn)
 	} else {
 		for c := range h.channels {
 			names = append(names, c)

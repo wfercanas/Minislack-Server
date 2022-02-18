@@ -139,7 +139,7 @@ func (h *hub) message(cl *client, recipient string, m []byte) {
 		channel := h.channels[recipient]
 
 		if !h.userIsMember(channel, sender) {
-			commUserIsNotMember("LEAVE", recipient, cl.username, cl.conn)
+			commUserIsNotMember("MSG", recipient, cl.username, cl.conn)
 			return
 		}
 
@@ -165,8 +165,6 @@ func (h *hub) message(cl *client, recipient string, m []byte) {
 }
 
 func (h *hub) listFiles(cl *client, ch string) {
-	var response string
-
 	if !h.userRegistered(cl.username) {
 		commUserNotRegistered("FILES", cl.conn)
 		return
@@ -180,8 +178,7 @@ func (h *hub) listFiles(cl *client, ch string) {
 	channel := h.channels[ch]
 
 	if !h.userIsMember(channel, sender) {
-		response = fmt.Sprintf("FILES Failed: %s is not a member of %s\n", cl.username, ch)
-		communicate(response, cl.conn)
+		commUserIsNotMember("FILES", ch, cl.username, cl.conn)
 		return
 	}
 

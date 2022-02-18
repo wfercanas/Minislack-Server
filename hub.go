@@ -187,8 +187,6 @@ func (h *hub) listFiles(cl *client, ch string) {
 }
 
 func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
-	var response string
-
 	if !h.userRegistered(cl.username) {
 		commUserNotRegistered("SEND", cl.conn)
 		return
@@ -207,7 +205,6 @@ func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
 	}
 
 	fn := string(filename)
-
 	if h.fileExists(channel, fn) {
 		commFilenameAlreadyUsed("SEND", fn, cl.conn)
 		return
@@ -216,9 +213,7 @@ func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
 	fileAddress := newFile(fn, file)
 	h.channels[ch].files[fn] = fileAddress
 
-	response = fmt.Sprintf("SEND Successful: %s saved in %s\n", fn, ch)
-	communicate(response, cl.conn)
-
+	commFileSaved("SEND", ch, fn, cl.conn)
 	channel.broadcast(cl.username, []byte(fmt.Sprintf("just saved %s file", fn)))
 }
 

@@ -50,3 +50,8 @@ func commUserLeftChannel(command string, ch string, username string, client net.
 	response := fmt.Sprintf("%s Successful: %s was removed from %s\n", command, username, ch)
 	communicate(response, client)
 }
+
+func commDestinationUserNotRegistered(command string, username string, client net.Conn) {
+	response := fmt.Sprintf("%s Failed: %s is not a registered user\n", command, username)
+	communicate(response, client)
+}

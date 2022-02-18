@@ -60,3 +60,8 @@ func commDirectMessageDelivered(command string, username string, client net.Conn
 	response := fmt.Sprintf("%s Successful: direct message delivered to %s\n", command, username)
 	communicate(response, client)
 }
+
+func commFilenameAlreadyUsed(command string, filename string, client net.Conn) {
+	response := fmt.Sprintf("%s Failed: file %s already exists, use another name\n", command, filename)
+	communicate(response, client)
+}

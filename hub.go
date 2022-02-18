@@ -143,8 +143,7 @@ func (h *hub) message(cl *client, recipient string, m []byte) {
 		log.Printf("MSG Successful: %s sent a message to %s\n", cl.username, recipient)
 	case '@':
 		if !h.userRegistered(recipient) {
-			response = fmt.Sprintf("MSG Failed: %s is not a registered user\n", recipient)
-			communicate(response, cl.conn)
+			commDestinationUserNotRegistered("MSG", recipient, cl.conn)
 			return
 		}
 		user := h.clients[recipient]

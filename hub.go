@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"log"
-	"net"
 	"strings"
 )
 
@@ -60,196 +58,185 @@ func (h *hub) run() {
 }
 
 func (h *hub) register(cl *client) {
-	var response string
-	if _, exists := h.clients[cl.username]; exists {
-		response = fmt.Sprintf("REG Denied: %s was already taken\n", cl.username)
-		communicate(response, cl.conn)
+	if h.userRegistered(cl.username) {
+		commUsernameTaken(cl.username, cl.conn)
 		cl.username = ""
 	} else {
 		h.clients[cl.username] = cl
-		response = fmt.Sprintf("REG Successful: registered as %s \n", cl.username)
-		communicate(response, cl.conn)
+		commRegisterSuccess(cl.username, cl.conn)
 	}
 }
 
 func (h *hub) deregister(cl *client) {
-	if _, exists := h.clients[cl.username]; exists {
+	if h.userRegistered(cl.username) {
 		delete(h.clients, cl.username)
 		for _, channel := range h.channels {
 			delete(channel.clients, cl)
 		}
+		log.Printf("DREG Executed: connection lost with %s \n", cl.username)
 	}
-	log.Printf("DREG Executed: connection lost with %s \n", cl.username)
 }
 
 func (h *hub) joinChannel(cl *client, ch string) {
-	var response string
-	if client, ok := h.clients[cl.username]; ok {
-		if channel, ok := h.channels[ch]; ok {
-			channel.clients[client] = true
-			response = fmt.Sprintf("JOIN Successful: %s was added to %s\n", cl.username, ch)
-			communicate(response, cl.conn)
-		} else {
-			h.channels[ch] = newChannel(ch)
-			h.channels[ch].clients[client] = true
-			response = fmt.Sprintf("JOIN Successful: channel %s was created and user %s has joined it\n", ch, cl.username)
-			communicate(response, cl.conn)
-		}
-	} else {
-		response = "JOIN Failed: user isn't registered\n"
-		communicate(response, cl.conn)
+	if !h.userRegistered(cl.username) {
+		commUserNotRegistered("JOIN", cl.conn)
+		return
 	}
+	client := h.clients[cl.username]
+
+	if !h.channelExists(ch) {
+		h.channels[ch] = newChannel(ch)
+		commChannelCreated("JOIN", ch, cl.conn)
+	}
+	channel := h.channels[ch]
+
+	channel.clients[client] = true
+	commUserJoinedChannel("JOIN", ch, cl.username, cl.conn)
 }
 
 func (h *hub) leaveChannel(cl *client, ch string) {
-	var response string
-	if client, ok := h.clients[cl.username]; ok {
-		if channel, ok := h.channels[ch]; ok {
-			delete(channel.clients, client)
-			response = fmt.Sprintf("LEAVE Successful: %s was removed from %s\n", cl.username, ch)
-			communicate(response, cl.conn)
-		} else {
-			response = fmt.Sprintf("LEAVE Failed: %s doesn't exist\n", ch)
-			communicate(response, cl.conn)
-		}
-	} else {
-		response = "LEAVE Failed: user isn't registered\n"
-		communicate(response, cl.conn)
-	}
-}
-
-func (h *hub) message(cl *client, r string, m []byte) {
-	var response string
-	if sender, ok := h.clients[cl.username]; ok {
-		switch r[0] {
-		case '#':
-			if channel, ok := h.channels[r]; ok {
-				if _, ok := channel.clients[sender]; ok {
-					channel.broadcast(sender.username, m)
-					log.Printf("MSG Successful: %s sent a message to %s\n", cl.username, r)
-				} else {
-					response = fmt.Sprintf("MSG Failed: %s is not a member of %s\n", cl.username, r)
-					communicate(response, cl.conn)
-				}
-			} else {
-				response = fmt.Sprintf("MSG Failed: %s doesn't exist\n", r)
-				communicate(response, cl.conn)
-			}
-		case '@':
-			if user, ok := h.clients[r]; ok {
-				msg := append([]byte(cl.username), ": "...)
-				msg = append(msg, m...)
-				msg = append(msg, "\n"...)
-				user.conn.Write(msg)
-				response = fmt.Sprintf("MSG Successful: message delivered to %s\n", user.username)
-				communicate(response, cl.conn)
-			} else {
-				response = fmt.Sprintf("MSG Failed: %s is not a registered user\n", r)
-				communicate(response, cl.conn)
-			}
-		}
-	} else {
-		response = "MSG Failed: user isn't registered\n"
-		communicate(response, cl.conn)
-	}
-}
-
-func (h *hub) listFiles(cl *client, ch string) {
-	var response string
-	if sender, ok := h.clients[cl.username]; ok {
-		if channel, ok := h.channels[ch]; ok {
-			if _, ok := h.channels[ch].clients[sender]; ok {
-				var files []string
-
-				for file := range channel.files {
-					files = append(files, file)
-				}
-
-				enum := strings.Join(files, "\n")
-				list := "Channel files ->>\n" + enum
-
-				cl.conn.Write([]byte(list + "\n"))
-				log.Printf("FILES Successful: list delivered to %s\n", cl.username)
-			} else {
-				response = fmt.Sprintf("FILES Failed: %s is not a member of %s\n", cl.username, ch)
-				communicate(response, cl.conn)
-			}
-		} else {
-			response = fmt.Sprintf("FILES Failed: channel %s doesn't exist\n", ch)
-			communicate(response, cl.conn)
-		}
-	} else {
-		response = "FILES Failed: user isn't registered\n"
-		communicate(response, cl.conn)
-	}
-}
-
-func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
-	var response string
-
-	if _, ok := h.clients[cl.username]; !ok {
-		response = "SEND Failed: user isn't registered\n"
-		communicate(response, cl.conn)
+	if !h.userRegistered(cl.username) {
+		commUserNotRegistered("LEAVE", cl.conn)
 		return
 	}
-	sender := h.clients[cl.username]
+	client := h.clients[cl.username]
 
-	if _, ok := h.channels[ch]; !ok {
-		response = fmt.Sprintf("SEND Failed: channel %s doesn't exist\n", ch)
-		communicate(response, cl.conn)
+	if !h.channelExists(ch) {
+		commChannelDoesntExist("LEAVE", ch, cl.conn)
 		return
 	}
 	channel := h.channels[ch]
 
-	if _, ok := channel.clients[sender]; !ok {
-		response = fmt.Sprintf("SEND Failed: %s is not a member of %s\n", cl.username, ch)
-		communicate(response, cl.conn)
+	if !h.userIsMember(channel, client) {
+		commUserIsNotMember("LEAVE", ch, cl.username, cl.conn)
+		return
+	}
+
+	delete(channel.clients, client)
+	commUserLeftChannel("LEAVE", ch, cl.username, cl.conn)
+}
+
+func (h *hub) message(cl *client, recipient string, m []byte) {
+	if !h.userRegistered(cl.username) {
+		commUserNotRegistered("MSG", cl.conn)
+		return
+	}
+	sender := h.clients[cl.username]
+
+	switch recipient[0] {
+	case '#':
+		if !h.channelExists(recipient) {
+			commChannelDoesntExist("MSG", recipient, cl.conn)
+			return
+		}
+		channel := h.channels[recipient]
+
+		if !h.userIsMember(channel, sender) {
+			commUserIsNotMember("MSG", recipient, cl.username, cl.conn)
+			return
+		}
+
+		channel.broadcast(sender.username, m)
+		log.Printf("MSG Successful: %s sent a message to %s\n", cl.username, recipient)
+	case '@':
+		if !h.userRegistered(recipient) {
+			commDestinationUserNotRegistered("MSG", recipient, cl.conn)
+			return
+		}
+		user := h.clients[recipient]
+
+		msg := append([]byte(cl.username), ": "...)
+		msg = append(msg, m...)
+		msg = append(msg, "\n"...)
+		user.conn.Write(msg)
+
+		commDirectMessageDelivered("MSG", user.username, cl.conn)
+	}
+}
+
+func (h *hub) listFiles(cl *client, ch string) {
+	if !h.userRegistered(cl.username) {
+		commUserNotRegistered("FILES", cl.conn)
+		return
+	}
+	sender := h.clients[cl.username]
+
+	if !h.channelExists(ch) {
+		commChannelDoesntExist("FILES", ch, cl.conn)
+		return
+	}
+	channel := h.channels[ch]
+
+	if !h.userIsMember(channel, sender) {
+		commUserIsNotMember("FILES", ch, cl.username, cl.conn)
+		return
+	}
+
+	var files []string
+
+	for file := range channel.files {
+		files = append(files, file)
+	}
+
+	enum := strings.Join(files, "\n")
+	list := "Channel files ->>\n" + enum
+
+	cl.conn.Write([]byte(list + "\n"))
+	log.Printf("FILES Successful: list delivered to %s\n", cl.username)
+}
+
+func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
+	if !h.userRegistered(cl.username) {
+		commUserNotRegistered("SEND", cl.conn)
+		return
+	}
+	sender := h.clients[cl.username]
+
+	if !h.channelExists(ch) {
+		commChannelDoesntExist("SEND", ch, cl.conn)
+		return
+	}
+	channel := h.channels[ch]
+
+	if !h.userIsMember(channel, sender) {
+		commUserIsNotMember("SEND", ch, cl.username, cl.conn)
 		return
 	}
 
 	fn := string(filename)
-	if _, ok := channel.files[fn]; ok {
-		response = fmt.Sprintf("SEND Failed: file %s already exists, use another name\n", fn)
-		communicate(response, cl.conn)
+	if h.fileExists(channel, fn) {
+		commFilenameAlreadyUsed("SEND", fn, cl.conn)
 		return
 	}
 
 	fileAddress := newFile(fn, file)
 	h.channels[ch].files[fn] = fileAddress
 
-	response = fmt.Sprintf("SEND Successful: %s saved in %s\n", fn, ch)
-	communicate(response, cl.conn)
-
+	commFileSaved("SEND", ch, fn, cl.conn)
 	channel.broadcast(cl.username, []byte(fmt.Sprintf("just saved %s file", fn)))
 }
 
 func (h *hub) getFile(cl *client, ch string, filename []byte) {
-	var response string
-
-	if _, ok := h.clients[cl.username]; !ok {
-		response = "GET Failed: user isn't registered\n"
-		communicate(response, cl.conn)
+	if !h.userRegistered(cl.username) {
+		commUserNotRegistered("GET", cl.conn)
 		return
 	}
 	sender := h.clients[cl.username]
 
-	if _, ok := h.channels[ch]; !ok {
-		response = fmt.Sprintf("GET Failed: channel %s doesn't exist\n", ch)
-		communicate(response, cl.conn)
+	if !h.channelExists(ch) {
+		commChannelDoesntExist("GET", ch, cl.conn)
 		return
 	}
 	channel := h.channels[ch]
 
-	if _, ok := channel.clients[sender]; !ok {
-		response = fmt.Sprintf("GET Failed: %s is not a member of %s\n", cl.username, ch)
-		communicate(response, cl.conn)
+	if !h.userIsMember(channel, sender) {
+		commUserIsNotMember("GET", ch, cl.username, cl.conn)
 		return
 	}
 
 	fn := string(filename)
-	if _, ok := channel.files[fn]; !ok {
-		response = fmt.Sprintf("GET Failed: file %s doesn't exist\n", fn)
-		communicate(response, cl.conn)
+	if !h.fileExists(channel, fn) {
+		commFileDoesntExist("GET", ch, fn, cl.conn)
 		return
 	}
 
@@ -261,62 +248,48 @@ func (h *hub) getFile(cl *client, ch string, filename []byte) {
 	payload = append(payload, []byte(" ")...)
 	payload = append(payload, formattedBody...)
 
-	response = fmt.Sprintf("GET Successful: sending %s file", fn)
-	communicate(response, cl.conn)
+	commSendingFile("GET", fn, cl.conn)
 	cl.conn.Write(payload)
 }
 
 func (h *hub) listUsers(cl *client) {
-	var response string
-	if client, ok := h.clients[cl.username]; ok {
-		var names []string
-
-		for c := range h.clients {
-			names = append(names, c)
-		}
-
-		enum := strings.Join(names, ", ")
-		list := "->> Registered users: " + enum
-
-		client.conn.Write([]byte(list + "\n"))
-		log.Printf("USRS Successful: list delivered to %s\n", cl.username)
-	} else {
-		response = "USRS Failed: user isn't registered\n"
-		communicate(response, cl.conn)
+	if !h.userRegistered(cl.username) {
+		commUserNotRegistered("USRS", cl.conn)
+		return
 	}
+	client := h.clients[cl.username]
+
+	var names []string
+
+	for c := range h.clients {
+		names = append(names, c)
+	}
+
+	enum := strings.Join(names, ", ")
+	list := "->> Registered users: " + enum
+
+	client.conn.Write([]byte(list + "\n"))
+	log.Printf("USRS Successful: list delivered to %s\n", cl.username)
 }
 
 func (h *hub) listChannels(cl *client) {
-	var response string
-	if client, ok := h.clients[cl.username]; ok {
-		var names []string
-
-		if len(h.channels) == 0 {
-			response = "CHNS Successful: There are no channels created\n"
-			communicate(response, cl.conn)
-		} else {
-			for c := range h.channels {
-				names = append(names, c)
-			}
-			enum := strings.Join(names, ", ")
-			list := "->> Channels: " + enum
-			client.conn.Write([]byte(list + "\n"))
-			log.Printf("CHNS Successful: list delivered to %s", cl.username)
-		}
-	} else {
-		response = "CHNS Failed: user isn't registered\n"
-		communicate(response, cl.conn)
+	if !h.userRegistered(cl.username) {
+		commUserNotRegistered("CHNS", cl.conn)
+		return
 	}
-}
+	client := h.clients[cl.username]
 
-func communicate(response string, connection net.Conn) {
-	log.Print(response)
-	connection.Write([]byte(string("->> " + response + "\n")))
-}
+	var names []string
 
-func replaceReturns(body []byte) []byte {
-	splittedBody := bytes.Split(body, []byte("\n"))
-	joinedBody := bytes.Join(splittedBody, []byte("//"))
-	joinedBody = append(joinedBody, '\n')
-	return joinedBody
+	if len(h.channels) == 0 {
+		commNoChannelsCreated("CHNS", cl.conn)
+	} else {
+		for c := range h.channels {
+			names = append(names, c)
+		}
+		enum := strings.Join(names, ", ")
+		list := "->> Channels: " + enum
+		client.conn.Write([]byte(list + "\n"))
+		log.Printf("CHNS Successful: list delivered to %s", cl.username)
+	}
 }

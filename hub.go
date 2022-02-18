@@ -139,10 +139,10 @@ func (h *hub) message(cl *client, recipient string, m []byte) {
 		channel := h.channels[recipient]
 
 		if !h.userIsMember(channel, sender) {
-			response = fmt.Sprintf("MSG Failed: %s is not a member of %s\n", cl.username, recipient)
-			communicate(response, cl.conn)
+			commUserIsNotMember("LEAVE", recipient, cl.username, cl.conn)
 			return
 		}
+
 		channel.broadcast(sender.username, m)
 		log.Printf("MSG Successful: %s sent a message to %s\n", cl.username, recipient)
 	case '@':

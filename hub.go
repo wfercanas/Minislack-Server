@@ -211,8 +211,7 @@ func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
 	channel := h.channels[ch]
 
 	if !h.userIsMember(channel, sender) {
-		response = fmt.Sprintf("SEND Failed: %s is not a member of %s\n", cl.username, ch)
-		communicate(response, cl.conn)
+		commUserIsNotMember("SEND", ch, cl.username, cl.conn)
 		return
 	}
 
@@ -249,8 +248,7 @@ func (h *hub) getFile(cl *client, ch string, filename []byte) {
 	channel := h.channels[ch]
 
 	if !h.userIsMember(channel, sender) {
-		response = fmt.Sprintf("GET Failed: %s is not a member of %s\n", cl.username, ch)
-		communicate(response, cl.conn)
+		commUserIsNotMember("GET", ch, cl.username, cl.conn)
 		return
 	}
 

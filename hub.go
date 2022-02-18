@@ -96,8 +96,6 @@ func (h *hub) joinChannel(cl *client, ch string) {
 }
 
 func (h *hub) leaveChannel(cl *client, ch string) {
-	var response string
-
 	if !h.userRegistered(cl.username) {
 		commUserNotRegistered("LEAVE", cl.conn)
 		return
@@ -116,9 +114,7 @@ func (h *hub) leaveChannel(cl *client, ch string) {
 	}
 
 	delete(channel.clients, client)
-	response = fmt.Sprintf("LEAVE Successful: %s was removed from %s\n", cl.username, ch)
-	communicate(response, cl.conn)
-
+	commUserLeftChannel("LEAVE", ch, cl.username, cl.conn)
 }
 
 func (h *hub) message(cl *client, recipient string, m []byte) {

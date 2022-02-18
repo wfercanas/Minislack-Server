@@ -175,8 +175,7 @@ func (h *hub) listFiles(cl *client, ch string) {
 	sender := h.clients[cl.username]
 
 	if !h.channelExists(ch) {
-		response = fmt.Sprintf("FILES Failed: channel %s doesn't exist\n", ch)
-		communicate(response, cl.conn)
+		commChannelDoesntExist("FILES", ch, cl.conn)
 		return
 	}
 	channel := h.channels[ch]

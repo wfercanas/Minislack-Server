@@ -118,8 +118,6 @@ func (h *hub) leaveChannel(cl *client, ch string) {
 }
 
 func (h *hub) message(cl *client, recipient string, m []byte) {
-	var response string
-
 	if !h.userRegistered(cl.username) {
 		commUserNotRegistered("MSG", cl.conn)
 		return
@@ -151,11 +149,9 @@ func (h *hub) message(cl *client, recipient string, m []byte) {
 		msg := append([]byte(cl.username), ": "...)
 		msg = append(msg, m...)
 		msg = append(msg, "\n"...)
-
 		user.conn.Write(msg)
-		response = fmt.Sprintf("MSG Successful: message delivered to %s\n", user.username)
-		communicate(response, cl.conn)
 
+		commDirectMessageDelivered("MSG", user.username, cl.conn)
 	}
 }
 

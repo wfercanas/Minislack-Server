@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"strconv"
 )
@@ -48,7 +49,8 @@ func (c *client) read() error {
 
 func (c *client) handle(message []byte) {
 	cmd := bytes.ToUpper(bytes.TrimSpace(bytes.Split(message, []byte(" "))[0]))
-	args := bytes.TrimSpace(bytes.TrimPrefix(message, cmd))
+	args := bytes.TrimSpace(bytes.TrimPrefix(message, bytes.ToLower(cmd)))
+	log.Println(string(args))
 
 	switch string(cmd) {
 	case "REG":

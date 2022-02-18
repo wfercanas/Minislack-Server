@@ -82,7 +82,6 @@ func (h *hub) joinChannel(cl *client, ch string) {
 		commUserNotRegistered("JOIN", cl.conn)
 		return
 	}
-	client := h.clients[cl.username]
 
 	if !h.channelExists(ch) {
 		h.channels[ch] = newChannel(ch)
@@ -90,7 +89,7 @@ func (h *hub) joinChannel(cl *client, ch string) {
 	}
 	channel := h.channels[ch]
 
-	channel.clients[client] = true
+	channel.clients[cl] = true
 	commUserJoinedChannel("JOIN", ch, cl.username, cl.conn)
 }
 
@@ -99,7 +98,6 @@ func (h *hub) leaveChannel(cl *client, ch string) {
 		commUserNotRegistered("LEAVE", cl.conn)
 		return
 	}
-	client := h.clients[cl.username]
 
 	if !h.channelExists(ch) {
 		commChannelDoesntExist("LEAVE", ch, cl.conn)
@@ -107,12 +105,12 @@ func (h *hub) leaveChannel(cl *client, ch string) {
 	}
 	channel := h.channels[ch]
 
-	if !h.userIsMember(channel, client) {
+	if !h.userIsMember(channel, cl) {
 		commUserIsNotMember("LEAVE", ch, cl.username, cl.conn)
 		return
 	}
 
-	delete(channel.clients, client)
+	delete(channel.clients, cl)
 	commUserLeftChannel("LEAVE", ch, cl.username, cl.conn)
 }
 
@@ -121,7 +119,6 @@ func (h *hub) message(cl *client, recipient string, m []byte) {
 		commUserNotRegistered("MSG", cl.conn)
 		return
 	}
-	sender := h.clients[cl.username]
 
 	switch recipient[0] {
 	case '#':
@@ -131,12 +128,12 @@ func (h *hub) message(cl *client, recipient string, m []byte) {
 		}
 		channel := h.channels[recipient]
 
-		if !h.userIsMember(channel, sender) {
+		if !h.userIsMember(channel, cl) {
 			commUserIsNotMember("MSG", recipient, cl.username, cl.conn)
 			return
 		}
 
-		channel.broadcast(sender.username, m)
+		channel.broadcast(cl.username, m)
 		log.Printf("MSG Successful: %s sent a message to %s\n", cl.username, recipient)
 	case '@':
 		if !h.userRegistered(recipient) {
@@ -159,7 +156,6 @@ func (h *hub) listFiles(cl *client, ch string) {
 		commUserNotRegistered("FILES", cl.conn)
 		return
 	}
-	sender := h.clients[cl.username]
 
 	if !h.channelExists(ch) {
 		commChannelDoesntExist("FILES", ch, cl.conn)
@@ -167,22 +163,26 @@ func (h *hub) listFiles(cl *client, ch string) {
 	}
 	channel := h.channels[ch]
 
-	if !h.userIsMember(channel, sender) {
+	if !h.userIsMember(channel, cl) {
 		commUserIsNotMember("FILES", ch, cl.username, cl.conn)
 		return
 	}
 
 	var files []string
 
-	for file := range channel.files {
-		files = append(files, file)
+	if len(channel.files) == 0 {
+		commChannelWithNoFiles("FILES", ch, cl.conn)
+	} else {
+		for file := range channel.files {
+			files = append(files, file)
+		}
+
+		enum := strings.Join(files, ", ")
+		list := "Channel files ->>\n" + enum
+
+		cl.conn.Write([]byte(list + "\n"))
+		log.Printf("FILES Successful: list delivered to %s\n", cl.username)
 	}
-
-	enum := strings.Join(files, "\n")
-	list := "Channel files ->>\n" + enum
-
-	cl.conn.Write([]byte(list + "\n"))
-	log.Printf("FILES Successful: list delivered to %s\n", cl.username)
 }
 
 func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
@@ -190,7 +190,6 @@ func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
 		commUserNotRegistered("SEND", cl.conn)
 		return
 	}
-	sender := h.clients[cl.username]
 
 	if !h.channelExists(ch) {
 		commChannelDoesntExist("SEND", ch, cl.conn)
@@ -198,7 +197,7 @@ func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
 	}
 	channel := h.channels[ch]
 
-	if !h.userIsMember(channel, sender) {
+	if !h.userIsMember(channel, cl) {
 		commUserIsNotMember("SEND", ch, cl.username, cl.conn)
 		return
 	}
@@ -221,7 +220,6 @@ func (h *hub) getFile(cl *client, ch string, filename []byte) {
 		commUserNotRegistered("GET", cl.conn)
 		return
 	}
-	sender := h.clients[cl.username]
 
 	if !h.channelExists(ch) {
 		commChannelDoesntExist("GET", ch, cl.conn)
@@ -229,7 +227,7 @@ func (h *hub) getFile(cl *client, ch string, filename []byte) {
 	}
 	channel := h.channels[ch]
 
-	if !h.userIsMember(channel, sender) {
+	if !h.userIsMember(channel, cl) {
 		commUserIsNotMember("GET", ch, cl.username, cl.conn)
 		return
 	}
@@ -257,7 +255,6 @@ func (h *hub) listUsers(cl *client) {
 		commUserNotRegistered("USRS", cl.conn)
 		return
 	}
-	client := h.clients[cl.username]
 
 	var names []string
 
@@ -268,7 +265,7 @@ func (h *hub) listUsers(cl *client) {
 	enum := strings.Join(names, ", ")
 	list := "->> Registered users: " + enum
 
-	client.conn.Write([]byte(list + "\n"))
+	cl.conn.Write([]byte(list + "\n"))
 	log.Printf("USRS Successful: list delivered to %s\n", cl.username)
 }
 
@@ -277,7 +274,6 @@ func (h *hub) listChannels(cl *client) {
 		commUserNotRegistered("CHNS", cl.conn)
 		return
 	}
-	client := h.clients[cl.username]
 
 	var names []string
 
@@ -289,7 +285,7 @@ func (h *hub) listChannels(cl *client) {
 		}
 		enum := strings.Join(names, ", ")
 		list := "->> Channels: " + enum
-		client.conn.Write([]byte(list + "\n"))
+		cl.conn.Write([]byte(list + "\n"))
 		log.Printf("CHNS Successful: list delivered to %s", cl.username)
 	}
 }

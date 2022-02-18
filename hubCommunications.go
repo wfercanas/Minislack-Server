@@ -66,6 +66,11 @@ func commFilenameAlreadyUsed(command string, filename string, client net.Conn) {
 	communicate(response, client)
 }
 
+func commChannelWithNoFiles(command string, ch string, client net.Conn) {
+	response := fmt.Sprintf("%s Successful: channel %s has no files\n", command, ch)
+	communicate(response, client)
+}
+
 func commFileSaved(command string, ch string, filename string, client net.Conn) {
 	response := fmt.Sprintf("%s Successful: %s saved in %s\n", command, filename, ch)
 	communicate(response, client)

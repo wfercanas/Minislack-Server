@@ -47,7 +47,7 @@ func (c *client) read() error {
 }
 
 func (c *client) handle(message []byte) {
-	cmd := bytes.ToUpper(bytes.TrimSpace(bytes.Split(message, []byte(" "))[0]))
+	cmd := bytes.TrimSpace(bytes.Split(message, []byte(" "))[0])
 	args := bytes.TrimSpace(bytes.TrimPrefix(message, cmd))
 
 	switch string(cmd) {

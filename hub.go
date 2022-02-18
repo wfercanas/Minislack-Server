@@ -134,8 +134,7 @@ func (h *hub) message(cl *client, recipient string, m []byte) {
 	switch recipient[0] {
 	case '#':
 		if !h.channelExists(recipient) {
-			response = fmt.Sprintf("MSG Failed: channel %s doesn't exist\n", recipient)
-			communicate(response, cl.conn)
+			commChannelDoesntExist("MSG", recipient, cl.conn)
 			return
 		}
 		channel := h.channels[recipient]

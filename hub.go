@@ -218,8 +218,6 @@ func (h *hub) sendFile(cl *client, ch string, filename []byte, file []byte) {
 }
 
 func (h *hub) getFile(cl *client, ch string, filename []byte) {
-	var response string
-
 	if !h.userRegistered(cl.username) {
 		commUserNotRegistered("GET", cl.conn)
 		return
@@ -251,8 +249,7 @@ func (h *hub) getFile(cl *client, ch string, filename []byte) {
 	payload = append(payload, []byte(" ")...)
 	payload = append(payload, formattedBody...)
 
-	response = fmt.Sprintf("GET Successful: sending %s file", fn)
-	communicate(response, cl.conn)
+	commSendingFile("GET", fn, cl.conn)
 	cl.conn.Write(payload)
 }
 

@@ -105,8 +105,7 @@ func (h *hub) leaveChannel(cl *client, ch string) {
 	client := h.clients[cl.username]
 
 	if !h.channelExists(ch) {
-		response = fmt.Sprintf("LEAVE Failed: channel %s doesn't exist\n", ch)
-		communicate(response, cl.conn)
+		commChannelDoesntExist("LEAVE", ch, cl.conn)
 		return
 	}
 	channel := h.channels[ch]
